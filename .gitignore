@@ -26,7 +26,13 @@ coverage
 out/
 build
 dist
+cache
 
+# Broadcasts
+!broadcast
+broadcast/*
+broadcast/*/31337/
+/packages/contracts/broadcast
 
 # Debug
 npm-debug.log*
@@ -36,3 +42,7 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+*.log
+.pnp.*
+lcov.info
+pnpm-lock.yaml
