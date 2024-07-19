@@ -1,5 +1,5 @@
 {
-  "extends": "@strobe/typescript-config/nextjs.json",
+  "extends": "@strobelabs/typescript-config/nextjs.json",
   "compilerOptions": {
     "plugins": [
       {
