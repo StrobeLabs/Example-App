@@ -7,7 +7,9 @@
     "dev": "turbo dev",
     "test": "turbo test",
     "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "deploy:core-sepolia": "cd packages/contracts && pnpm deploy:core-sepolia",
+    "deploy:core-anvil": "cd packages/contracts && pnpm deploy:core-anvil"
   },
   "devDependencies": {
     "prettier": "^3.2.5",
