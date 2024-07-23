@@ -48,3 +48,24 @@ pnpm lint
 # apps/example-app
 NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=
 ```
+
+### Deploying
+
+To deploy contracts to sepolia, create the following .env in `packages/contracts`:
+
+```
+SEPOLIA_RPC_URL=
+PRIVATE_KEY=
+ETHERSCAN_API_KEY=
+```
+
+Then, run the following command:
+
+```
+pnpm deploy:example-sepolia
+```
+
+### Deployed Contracts
+
+* ExampleApp.sol: [0x5075dC1c1174EBF96808414921206BC005794950](https://sepolia.etherscan.io/address/0x5075dC1c1174EBF96808414921206BC005794950)
+* AlwaysTrueVerifier.sol: [0xaD2070a742F8FA7BBe2C89441E5fbA806794bb35](https://sepolia.etherscan.io/address/0xaD2070a742F8FA7BBe2C89441E5fbA806794bb35)

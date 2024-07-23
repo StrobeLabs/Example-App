@@ -7,7 +7,9 @@
     "test": "forge test",
     "lint": "pnpm run lint:sol && pnpm run prettier:check",
     "lint:sol": "forge fmt --check && pnpm solhint {script,src,test}/**/*.sol",
-    "prettier:check": "prettier --check \"**/*.{json,md,yml}\" --ignore-path \".prettierignore\""
+    "prettier:check": "prettier --check \"**/*.{json,md,yml}\" --ignore-path \".prettierignore\"",
+    "deploy:example-sepolia": "source .env && forge script --chain sepolia script/ExampleContractsDeployer.s.sol:ExampleContractsDeployer --rpc-url $SEPOLIA_RPC_URL --broadcast -vvvv --slow --verify",
+    "deploy:example-anvil": "forge script script/ExampleContractsDeployer.s.sol:ExampleContractsDeployer --fork-url http://localhost:8545 --broadcast"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.0.1",
