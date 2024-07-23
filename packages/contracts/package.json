@@ -12,7 +12,8 @@
     "deploy:core-anvil": "forge script script/StrobeCoreDeployer.s.sol:StrobeCoreDeployer --fork-url http://localhost:8545 --broadcast"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.0.1"
+    "@openzeppelin/contracts": "^5.0.1",
+    "@strobelabs/contracts": "^0.1.0"
   },
   "devDependencies": {
     "forge-std": "github:foundry-rs/forge-std#v1.8.1",
