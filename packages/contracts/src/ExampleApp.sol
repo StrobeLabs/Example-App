@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {StrobeCore} from "@strobelabs/core/StrobeCore.sol";
+import {IStrobeCore} from "@strobelabs/contracts/src/core/interfaces/IStrobeCore.sol";
 
 contract ExampleApp {
-    StrobeCore private strobeCore;
+    IStrobeCore private strobeCore;
 
     event ProofRequested(uint256 requestId);
     event ProofVerified(uint256 requestId, bool success);
 
     constructor(address strobeCoreAddress) {
-        strobeCore = StrobeCore(strobeCoreAddress);
+        strobeCore = IStrobeCore(strobeCoreAddress);
     }
 
     function requestProof(address verifierAddress, string memory ipfsHash) external {
