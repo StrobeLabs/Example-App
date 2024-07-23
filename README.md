@@ -68,6 +68,6 @@ pnpm deploy:example-sepolia
 ### Deployed Contracts
 
 ```
-ExampleApp.sol: 0xf623C10c85F74E27B2a25109E8Daf323c716Be53
-AlwaysTrueVerifier.sol: 0x44Ae54c9661Fa1d9262615FCD1CBC88E49327A4e
+ExampleApp.sol: 0x5075dC1c1174EBF96808414921206BC005794950
+AlwaysTrueVerifier.sol: 0xaD2070a742F8FA7BBe2C89441E5fbA806794bb35
 ```

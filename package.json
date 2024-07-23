@@ -8,8 +8,8 @@
     "test": "turbo test",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "deploy:example-sepolia": "cd packages/contracts && pnpm deploy:example-sepolia",
-    "deploy:example-anvil": "cd packages/contracts && pnpm deploy:example-anvil"
+    "deploy:example-sepolia": "turbo deploy:example-sepolia",
+    "deploy:example-anvil": "turbo deploy:example-anvil"
   },
   "devDependencies": {
     "prettier": "^3.2.5",

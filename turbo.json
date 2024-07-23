@@ -14,6 +14,8 @@
       "persistent": true,
       "inputs": ["$TURBO_DEFAULT$", ".env*"]
     },
-    "test": {}
+    "test": {},
+    "deploy:example-sepolia": {},
+    "deploy:example-anvil": {}
   }
 }
