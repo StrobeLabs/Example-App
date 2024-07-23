@@ -67,5 +67,5 @@ pnpm deploy:example-sepolia
 
 ### Deployed Contracts
 
-* ExampleApp.sol: [0x5075dC1c1174EBF96808414921206BC005794950](https://sepolia.etherscan.io/address/0x5075dC1c1174EBF96808414921206BC005794950)
-* AlwaysTrueVerifier.sol: [0xaD2070a742F8FA7BBe2C89441E5fbA806794bb35](https://sepolia.etherscan.io/address/0xaD2070a742F8FA7BBe2C89441E5fbA806794bb35)
+* ExampleApp.sol: [0x33424318De604A3CC553D1c34Cdfb137954bb74B](https://sepolia.etherscan.io/address/0x33424318De604A3CC553D1c34Cdfb137954bb74B)
+* AlwaysTrueVerifier.sol: [0x9bD50303f82D6E08A145AAE3eF8362ae5dbC0D73](https://sepolia.etherscan.io/address/0x9bD50303f82D6E08A145AAE3eF8362ae5dbC0D73)

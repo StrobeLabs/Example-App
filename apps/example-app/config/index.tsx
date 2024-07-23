@@ -1,5 +1,5 @@
 import { defaultWagmiConfig } from "@web3modal/wagmi/react/config";
-import { cookieStorage, createStorage } from "wagmi";
+import { http, cookieStorage, createStorage } from "wagmi";
 import { sepolia } from "wagmi/chains";
 
 export const projectId =
@@ -21,4 +21,7 @@ export const config = defaultWagmiConfig({
   storage: createStorage({
     storage: cookieStorage,
   }),
+  transports: {
+    [sepolia.id]: http(process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL),
+  },
 });
