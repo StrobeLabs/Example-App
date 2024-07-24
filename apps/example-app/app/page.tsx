@@ -1,8 +1,8 @@
 "use client";
 
-import { useWalletInfo, useWeb3Modal } from '@web3modal/wagmi/react';
+import { useWalletInfo, useWeb3Modal, useWeb3ModalState } from '@web3modal/wagmi/react';
 import { useState, useEffect, FormEvent } from "react";
-import { useWriteContract, useWatchContractEvent, useWaitForTransactionReceipt } from "wagmi";
+import { useWriteContract, useWatchContractEvent, useWaitForTransactionReceipt, useSwitchChain } from "wagmi";
 import { exampleAppABI } from '../abis/ExampleApp';
 import { sepolia } from 'viem/chains';
 
@@ -13,6 +13,8 @@ const CIRCUIT_HASH = "ReplaceWithPinnedIPFSHash";
 export default function Home() {
   const { walletInfo } = useWalletInfo();
   const { open } = useWeb3Modal();
+  const { selectedNetworkId } = useWeb3ModalState()
+  const { switchChain } = useSwitchChain();
   const { writeContract, data: requestHash, error: requestError } = useWriteContract();
   const { isLoading: isRequestLoading, isSuccess: isRequestSuccess } = useWaitForTransactionReceipt({ hash: requestHash });
 
@@ -27,11 +29,15 @@ export default function Home() {
       return;
     }
 
+    if (Number(selectedNetworkId) !== sepolia.id) {
+      switchChain({ chainId: sepolia.id });
+      return;
+    }
+
     const inputtedVerifierAddress = (event.target as HTMLFormElement).verifierAddress.value;
     const inputtedCircuitHash = (event.target as HTMLFormElement).circuitIPFSHash.value;
-
+    
     writeContract({ 
-      chainId: sepolia.id,
       abi: exampleAppABI,
       address: EXAMPLE_APP_ADDRESS,
       functionName: 'requestProof',
