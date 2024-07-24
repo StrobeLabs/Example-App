@@ -4,6 +4,7 @@ import { useWalletInfo, useWeb3Modal } from '@web3modal/wagmi/react';
 import { useState, useEffect, FormEvent } from "react";
 import { useWriteContract, useWatchContractEvent, useWaitForTransactionReceipt } from "wagmi";
 import { exampleAppABI } from '../abis/ExampleApp';
+import { sepolia } from 'viem/chains';
 
 const EXAMPLE_APP_ADDRESS = "0x33424318De604A3CC553D1c34Cdfb137954bb74B";
 const VERIFIER_ADDRESS = "0x9bD50303f82D6E08A145AAE3eF8362ae5dbC0D73";
@@ -30,6 +31,7 @@ export default function Home() {
     const inputtedCircuitHash = (event.target as HTMLFormElement).circuitIPFSHash.value;
 
     writeContract({ 
+      chainId: sepolia.id,
       abi: exampleAppABI,
       address: EXAMPLE_APP_ADDRESS,
       functionName: 'requestProof',
@@ -122,10 +124,8 @@ export default function Home() {
             <div className="text-neutral-400 font-bold mt-8 text-center">
               <span> Request failure ❌</span>
               <br/>
-              {requestHash && (
-                <a href={`https://sepolia.etherscan.io/tx/${requestHash}`} className="underline" target="_blank" rel="noopener noreferrer">
-                  View on Etherscan
-                </a>
+              {requestError && (
+                <span>{requestError.name}</span>
               )}
             </div>
           )}
