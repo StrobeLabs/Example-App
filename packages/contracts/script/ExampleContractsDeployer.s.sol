@@ -10,7 +10,7 @@ contract ExampleContractsDeployer is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-        address strobeCoreAddress = 0x015f16b07D1E2d53CBce809551062E84F34FACCD;
+        address strobeCoreAddress = 0xB3E387886b0Bf305d166470F032e3ED89CD95F96;
         ExampleApp exampleApp = new ExampleApp(strobeCoreAddress);
 
         AlwaysTrueVerifier alwaysTrueVerifier = new AlwaysTrueVerifier();
