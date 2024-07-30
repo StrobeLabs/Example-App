@@ -14,7 +14,7 @@ contract ExampleApp {
     }
 
     function requestProof(address verifierAddress, string memory ipfsHash) external {
-        uint256 requestId = strobeCore.requestProof(verifierAddress, ipfsHash);
+        uint256 requestId = strobeCore.requestProof(address(this), verifierAddress, ipfsHash);
         emit ProofRequested(requestId);
     }
 

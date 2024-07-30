@@ -2,13 +2,12 @@
 pragma solidity >=0.8.25;
 
 import {IERC257} from "@strobelabs/contracts/src/core/interfaces/IERC257.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 contract AlwaysTrueVerifier is IERC257 {
-    function verifyProof(
-        uint256[2] memory a, 
-        uint256[2][2] memory b, 
-        uint256[2] memory c, 
-        uint256[2] memory input) 
+    function verify(
+        bytes memory proof,
+        bytes memory proofInputs) 
         external 
         pure 
         returns (bool r) {
@@ -16,6 +15,6 @@ contract AlwaysTrueVerifier is IERC257 {
     }
 
     function supportsInterface(bytes4 interfaceId) external pure override returns (bool) {
-        return interfaceId == type(IERC257).interfaceId;
+        return interfaceId == type(IERC257).interfaceId || interfaceId == type(IERC165).interfaceId;
     }
 }

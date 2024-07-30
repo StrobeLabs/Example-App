@@ -6,8 +6,8 @@ import { useWriteContract, useWatchContractEvent, useWaitForTransactionReceipt, 
 import { exampleAppABI } from '../abis/ExampleApp';
 import { sepolia } from 'viem/chains';
 
-const EXAMPLE_APP_ADDRESS = "0x33424318De604A3CC553D1c34Cdfb137954bb74B";
-const VERIFIER_ADDRESS = "0x9bD50303f82D6E08A145AAE3eF8362ae5dbC0D73";
+const EXAMPLE_APP_ADDRESS = "0xa9cC78168465a4d2893f8ef237320a90E2f859f8";
+const VERIFIER_ADDRESS = "0x2bf1b0C60d36cd0Ab014c5B169f18b1Ec85889F2";
 const CIRCUIT_HASH = "ReplaceWithPinnedIPFSHash";
 
 export default function Home() {
