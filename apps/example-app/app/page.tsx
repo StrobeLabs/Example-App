@@ -13,11 +13,6 @@ const EXAMPLE_APP_ADDRESS = process.env.NEXT_PUBLIC_EXAMPLE_APP_ADDRESS as `0x${
 const VERIFIER_ADDRESS = process.env.NEXT_PUBLIC_VERIFIER_ADDRESS as `0x${string}`;
 const CIRCUIT_HASH = process.env.NEXT_PUBLIC_CIRCUIT_HASH;
 
-console.log('STROBE_CORE_ADDRESS', STROBE_CORE_ADDRESS);
-console.log('EXAMPLE_APP_ADDRESS', EXAMPLE_APP_ADDRESS);
-console.log('VERIFIER_ADDRESS', VERIFIER_ADDRESS);
-console.log('CIRCUIT_HASH', CIRCUIT_HASH);
-
 export default function Home() {
   const { walletInfo } = useWalletInfo();
   const { open } = useWeb3Modal();
