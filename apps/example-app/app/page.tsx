@@ -4,8 +4,11 @@ import { useWalletInfo, useWeb3Modal, useWeb3ModalState } from '@web3modal/wagmi
 import { useState, useEffect, FormEvent } from "react";
 import { useWriteContract, useWatchContractEvent, useWaitForTransactionReceipt, useSwitchChain } from "wagmi";
 import { exampleAppABI } from '../abis/ExampleApp';
+import { strobeCoreABI } from '../abis/StrobeCore';
+import { toHex } from 'viem';
 import { sepolia } from 'viem/chains';
 
+const STROBE_CORE_ADDRESS = "0xB3E387886b0Bf305d166470F032e3ED89CD95F96";
 const EXAMPLE_APP_ADDRESS = "0xa9cC78168465a4d2893f8ef237320a90E2f859f8";
 const VERIFIER_ADDRESS = "0x2bf1b0C60d36cd0Ab014c5B169f18b1Ec85889F2";
 const CIRCUIT_HASH = "ReplaceWithPinnedIPFSHash";
@@ -15,11 +18,36 @@ export default function Home() {
   const { open } = useWeb3Modal();
   const { selectedNetworkId } = useWeb3ModalState()
   const { switchChain } = useSwitchChain();
-  const { writeContract, data: requestHash, error: requestError } = useWriteContract();
+  const { writeContract: request, data: requestHash, error: requestError } = useWriteContract();
+  const { writeContract: submitProof, data: proofSubmitHash, error: proofSubmitError} = useWriteContract();
   const { isLoading: isRequestLoading, isSuccess: isRequestSuccess } = useWaitForTransactionReceipt({ hash: requestHash });
+  const { isLoading: isProofLoading, isSuccess: isProofSuccess } = useWaitForTransactionReceipt({ hash: proofSubmitHash });
 
-  const [isProofPending, setIsProofPending] = useState(false);
-  const [isProofSuccess, setIsProofSuccess] = useState(false);
+  const [requestId, setRequestId] = useState<bigint>();
+
+  const [isValidProofFound, setIsValidProofFound] = useState(false);
+
+  useWatchContractEvent({
+    address: EXAMPLE_APP_ADDRESS,
+    abi: exampleAppABI,
+    eventName: 'ProofRequested',
+    onLogs(logs: any) {
+      if (logs[0]) {
+        setRequestId(logs[0].args.requestId);
+      }
+    },
+  });
+
+  useWatchContractEvent({
+    abi: exampleAppABI,
+    address: EXAMPLE_APP_ADDRESS,
+    eventName: 'ProofVerified',
+    onLogs(logs: any) {
+      if (logs[0] && logs[0].args.requestId === requestId && logs[0].args.success) {
+        setIsValidProofFound(true);
+      }
+    },
+  });
 
   const handleRequest = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -37,7 +65,7 @@ export default function Home() {
     const inputtedVerifierAddress = (event.target as HTMLFormElement).verifierAddress.value;
     const inputtedCircuitHash = (event.target as HTMLFormElement).circuitIPFSHash.value;
     
-    writeContract({ 
+    request({ 
       abi: exampleAppABI,
       address: EXAMPLE_APP_ADDRESS,
       functionName: 'requestProof',
@@ -48,22 +76,21 @@ export default function Home() {
     });
   };
 
-  useEffect(() => {
-    if (isRequestSuccess) {
-      setIsProofPending(true);
-    }
-  }, [isRequestSuccess]);
+  const handleProofSubmit = async () => {
+    const proof = toHex('proof');
+    const signals = toHex('signals');
 
-  useWatchContractEvent({
-    abi: exampleAppABI,
-    address: EXAMPLE_APP_ADDRESS,
-    eventName: 'ProofVerified',
-    onLogs(logs) {
-      console.log(logs);
-      setIsProofPending(false);
-      setIsProofSuccess(true);
-    },
-  });
+    submitProof({
+      abi: strobeCoreABI,
+      address: STROBE_CORE_ADDRESS,
+      functionName: 'submitProofById',
+      args: [
+        requestId,
+        proof,
+        signals
+      ],
+    })
+  }
 
   return (
     <div className="flex flex-col justify-center items-center h-screen bg-neutral-900">
@@ -107,11 +134,11 @@ export default function Home() {
             type="submit"
             className="flex justify-center items-center p-4 bg-neutral-400 text-neutral-800 rounded-full font-bold transition duration-300 hover:bg-neutral-700 hover:text-neutral-500"
           >
-            Request Proof
+            Request proof
           </button>
           {isRequestLoading && (
             <div className="flex items-center justify-center mt-8 text-center text-neutral-400 font-bold">
-              <span className="pr-2">Request transaction pending</span>
+              <span className="pr-2">Requesting a proof</span>
               <div className="border-4 border-neutral-600 border-t-neutral-500 rounded-full w-4 h-4 animate-spin"></div>
             </div>
           )}
@@ -124,7 +151,17 @@ export default function Home() {
                   View on Etherscan
                 </a>
               )}
+              <div className="flex justify-center mt-8">
+                <button
+                  type="button"
+                  className="flex justify-center items-center p-4 bg-neutral-400 text-neutral-800 rounded-full font-bold transition duration-300 hover:bg-neutral-700 hover:text-neutral-500"
+                  onClick={handleProofSubmit}
+                >
+                  Submit proof
+                </button>
+              </div>
             </div>
+            
           )}
           {requestError && (
             <div className="text-neutral-400 font-bold mt-8 text-center">
@@ -135,19 +172,40 @@ export default function Home() {
               )}
             </div>
           )}
-          {isProofPending && (
+          {isProofLoading && (
             <div className="flex items-center justify-center mt-8 text-center text-neutral-400 font-bold">
-              <span className="pr-2">Waiting for valid proof</span>
+              <span className="pr-2">Submitting a sample proof</span>
               <div className="border-4 border-neutral-600 border-t-neutral-500 rounded-full w-4 h-4 animate-spin"></div>
             </div>
           )}
-          {isProofSuccess && (
+          {isProofSuccess && typeof requestId !== 'undefined' && (
             <div className="text-neutral-400 font-bold mt-8 text-center">
-              <span> Proof successful ✅</span>
+              <span> Proof successfully submitted ✅</span>
               <br/>
-              {/* Display transaction hash */}
+              <a href={`https://sepolia.etherscan.io/tx/${requestHash}`} className="underline" target="_blank" rel="noopener noreferrer">
+                View on Etherscan
+              </a>
             </div>
           )}
+          {proofSubmitError && (
+            <div className="text-neutral-400 font-bold mt-8 text-center">
+              <span> Proof submittal failure ❌</span>
+              <br/>
+              {requestError && (
+                <span>{proofSubmitError.name}</span>
+              )}
+            </div>
+          )}
+          {isRequestSuccess && !isValidProofFound ? (
+            <div className="flex items-center justify-center mt-8 text-center text-neutral-400 font-bold">
+            <span className="pr-2">Waiting on proof submission</span>
+            <div className="border-4 border-neutral-600 border-t-neutral-500 rounded-full w-4 h-4 animate-spin"></div>
+          </div>
+          ) : isValidProofFound ? (
+            <div className="text-neutral-400 font-bold mt-8 text-center">
+              <span> Valid proof received ✅</span>
+            </div>
+          ) : null}
         </form>
       </main>
     </div>
