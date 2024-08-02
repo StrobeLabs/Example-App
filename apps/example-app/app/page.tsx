@@ -1,7 +1,7 @@
 "use client";
 
 import { useWalletInfo, useWeb3Modal, useWeb3ModalState } from '@web3modal/wagmi/react';
-import { useState, useEffect, FormEvent } from "react";
+import { useState, FormEvent } from "react";
 import { useWriteContract, useWatchContractEvent, useWaitForTransactionReceipt, useSwitchChain } from "wagmi";
 import { exampleAppABI } from '../abis/ExampleApp';
 import { strobeCoreABI } from '../abis/StrobeCore';
@@ -10,8 +10,8 @@ import { sepolia } from 'viem/chains';
 
 const STROBE_CORE_ADDRESS = process.env.NEXT_PUBLIC_STROBE_CORE_ADDRESS as `0x${string}`;
 const EXAMPLE_APP_ADDRESS = process.env.NEXT_PUBLIC_EXAMPLE_APP_ADDRESS as `0x${string}`;
-const VERIFIER_ADDRESS = process.env.NEXT_PUBLIC_VERIFIER_ADDRESS as `0x${string}`;
-const CIRCUIT_HASH = process.env.NEXT_PUBLIC_CIRCUIT_HASH;
+const VERIFIER_ADDRESS = process.env.NEXT_PUBLIC_ALWAYS_TRUE_VERIFIER_ADDRESS as `0x${string}`;
+const CIRCUIT_HASH = process.env.NEXT_PUBLIC_ALWAYS_TRUE_VERIFIER_CIRCUIT_HASH;
 
 export default function Home() {
   const { walletInfo } = useWalletInfo();
