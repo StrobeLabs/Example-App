@@ -170,7 +170,6 @@ export default function Home() {
           const parsed = await PostalMime.parse(contents);
           try {
             inputs = await generateInputFromEmail('testing/luma', contents);
-            console.log(inputs);
             body = inputs.emailBody ? Buffer.from(inputs.emailBody).toString('utf-8') : undefined;
             
             // Set the email inputs for later use
@@ -178,10 +177,7 @@ export default function Home() {
 
             // Make a request to ZK regex registry
             try {
-              const response = await axios.post('https://registry-dev.zkregex.com/api/proof/testing/luma', {
-                inputs
-              });
-              console.log('ZK regex registry response:', response.data);
+              const response = await axios.post('https://registry-dev.zkregex.com/api/proof/testing/luma', inputs);
 
               // Start polling for job status
               if (response.data.id) {
