@@ -12,7 +12,7 @@ import PostalMime from 'postal-mime';
 
 import { sepolia } from 'viem/chains';
 import { config } from '../../config';
-
+import axios from 'axios';
 
 export interface ContentProps {
     entry: any
@@ -47,7 +47,6 @@ export default function Home() {
     inputWorkers,
 } = useZkRegex();
 
-
     useEffect(() => {
         createInputWorker('testing/luma');
     }, [])
@@ -64,6 +63,49 @@ export default function Home() {
   const [publicFileContent, setPublicFileContent] = useState<any | null>(null);
   const [proofFileName, setProofFileName] = useState<string | null>(null);
   const [publicFileName, setPublicFileName] = useState<string | null>(null);
+
+  const [isPolling, setIsPolling] = useState(false);
+
+  const pollJobStatus = async (jobId: string) => {
+    setIsPolling(true);
+    const pollInterval = 5000; // Poll every 5 seconds
+    const maxAttempts = 60; // Maximum number of attempts (5 minutes)
+    let attempts = 0;
+
+    const poll = async () => {
+      try {
+        const response = await axios.get(`https://registry-dev.zkregex.com/api/job/${jobId}`);
+        console.log('Job status:', response.data.status);
+
+        if (response.data.status === 'COMPLETED') {
+          console.log('Proof:', response.data.proof);
+          setIsPolling(false);
+          return;
+        }
+
+        if (response.data.status === 'FAILED') {
+          console.error('Job failed:', response.data.error);
+          setIsPolling(false);
+          return;
+        }
+
+        attempts++;
+        if (attempts >= maxAttempts) {
+          console.error('Max polling attempts reached. Job did not complete in time.');
+          setIsPolling(false);
+          return;
+        }
+
+        setTimeout(poll, pollInterval);
+      } catch (error) {
+        console.error('Error polling job status:', error);
+        setIsPolling(false);
+      }
+    };
+
+    poll();
+  };
+
 
   const handleMint = async () => {
     if (!walletInfo) {
@@ -116,39 +158,55 @@ export default function Home() {
     });
   };
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>, _setFileContent: Function, _setFileName: Function) => {
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>, _setFileContent: Function, _setFileName: Function) => {
     const file = event.target.files?.[0];
     if (file) {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const contents = e.target?.result;
-            // console.log(contents);
-            if (typeof contents === "string") {
-                let inputs: any;
-                let error, body: string | undefined;
-                const parsed = await PostalMime.parse(contents)
-                try {
-                    inputs = await generateInputFromEmail('testing/luma', contents);
-                    console.log(inputs);
-                    body = inputs.emailBody ? Buffer.from(inputs.emailBody).toString('utf-8') : undefined;
-                } catch (e: any) {
-                    error = e.toString();
-                }
-                const email: Email = {
-                    decodedContents: contents,
-                    internalDate: "" + (parsed.date ? Date.parse(parsed.date) : file.lastModified),
-                    subject: parsed.subject || file.name,
-                    selected: false,
-                    body,
-                    inputs,
-                    error,
-                }
-                // setMessages([...messages, email])
-                console.log('email')
-                console.log(email)
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const contents = e.target?.result;
+        if (typeof contents === "string") {
+          let inputs: any;
+          let error, body: string | undefined;
+          const parsed = await PostalMime.parse(contents);
+          try {
+            inputs = await generateInputFromEmail('testing/luma', contents);
+            console.log(inputs);
+            body = inputs.emailBody ? Buffer.from(inputs.emailBody).toString('utf-8') : undefined;
+            
+            // Set the email inputs for later use
+            // setEmailInputs(inputs);
+
+            // Make a request to ZK regex registry
+            try {
+              const response = await axios.post('https://registry-dev.zkregex.com/api/proof/testing/luma', {
+                inputs
+              });
+              console.log('ZK regex registry response:', response.data);
+
+              // Start polling for job status
+              if (response.data.id) {
+                pollJobStatus(response.data.id);
+              }
+            } catch (error) {
+              console.error('Error making request to ZK regex registry:', error);
             }
+          } catch (e: any) {
+            error = e.toString();
+          }
+          const email: Email = {
+            decodedContents: contents,
+            internalDate: "" + (parsed.date ? Date.parse(parsed.date) : file.lastModified),
+            subject: parsed.subject || file.name,
+            selected: false,
+            body,
+            inputs,
+            error,
+          };
+          _setFileContent(email);
+          _setFileName(file.name);
         }
-        reader.readAsText(file);
+      };
+      reader.readAsText(file);
     }
   };
 
@@ -182,6 +240,12 @@ export default function Home() {
         >
           Mint with proof
         </button>
+        {isPolling && (
+            <div className="mt-4 text-neutral-400">
+            Polling for proof generation... Please wait.
+            </div>
+        )}
+        
         {/* {isLoading && (
           <div className="flex items-center justify-center mt-8 text-center text-neutral-400 font-bold">
             <span className="pr-2">Submitting proof</span>
