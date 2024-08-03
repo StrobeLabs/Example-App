@@ -7,7 +7,6 @@ import {
   UseGoogleLoginOptionsImplicitFlow,
 } from '@react-oauth/google';
 
-// import useAccount from '@hooks/useAccount';
 import { fetchProfile } from '../hooks/useGmailClient';
 import GoogleAuthContext from '../contexts/GoogleAuth'
 
@@ -16,38 +15,27 @@ interface ProvidersProps {
 }
 
 const GoogleAuthProvider = ({ children }: ProvidersProps) => {
-
-
-  /*
-   * State Keys
-   */
-
   const getGoogleAuthTokenKey = () => {
     return `googleAuthToken`;
   }
 
-  /*
-   * State
-   */
-
-  const [googleAuthToken, setGoogleAuthToken] = useState<any | null>(
-    () => {
-      const cachedToken = localStorage.getItem(getGoogleAuthTokenKey());
-      return cachedToken ? JSON.parse(cachedToken) : null;
-    }
-  );
-
+  const [googleAuthToken, setGoogleAuthToken] = useState<any | null>(null);
   const [isGoogleAuthed, setIsGoogleAuthed] = useState<boolean>(false);
   const [isScopesApproved, setIsScopesApproved] = useState<boolean>(false);
   const [loggedInGmail, setLoggedInGmail] = useState<string | null>(null);
 
   useEffect(() => {
-    // console.log('googleAuthScopes_1 TEST');
-    // console.log('checking googleAuthToken', googleAuthToken);
+    // Check if localStorage is available (client-side)
+    if (typeof window !== 'undefined') {
+      const cachedToken = localStorage.getItem(getGoogleAuthTokenKey());
+      if (cachedToken) {
+        setGoogleAuthToken(JSON.parse(cachedToken));
+      }
+    }
+  }, []);
 
+  useEffect(() => {
     if (googleAuthToken) {
-      // console.log('googleAuthScopes_2');
-
       const allScope = hasGrantedAllScopesGoogle(
         googleAuthToken,
         'email',
@@ -60,12 +48,7 @@ const GoogleAuthProvider = ({ children }: ProvidersProps) => {
   }, [googleAuthToken]);
 
   useEffect(() => {
-    // console.log('googleProfile_1');
-    // console.log('checking googleAuthToken', googleAuthToken);
-
     if (googleAuthToken) {
-      // console.log('googleProfile_2');
-
       const fetchData = async () => {
         try {
           const email = await fetchProfile(googleAuthToken.access_token);
@@ -73,7 +56,9 @@ const GoogleAuthProvider = ({ children }: ProvidersProps) => {
           if (email) {
             setLoggedInGmail(email);
             setIsGoogleAuthed(true);
-            localStorage.setItem('loggedInEmail', email);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('loggedInEmail', email);
+            }
           }
         } catch (error) {
           console.error('Error in fetching profile data:', error);
@@ -81,19 +66,17 @@ const GoogleAuthProvider = ({ children }: ProvidersProps) => {
       };
     
       fetchData();
-    };
+    }
   }, [googleAuthToken]);
-
-  /*
-   * Helpers
-   */
 
   const googleLogIn = useGoogleLogin({
     onSuccess: tokenResponse => {
       setGoogleAuthToken(tokenResponse);
       setIsGoogleAuthed(true);
 
-      localStorage.setItem(getGoogleAuthTokenKey(), JSON.stringify(tokenResponse));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(getGoogleAuthTokenKey(), JSON.stringify(tokenResponse));
+      }
     },
     onError: error => {
       console.error('Error logging in:', error);
@@ -105,32 +88,32 @@ const GoogleAuthProvider = ({ children }: ProvidersProps) => {
 
   const googleLogOut = () => {
     setIsScopesApproved(false);
-
     setGoogleAuthToken(null);
-    localStorage.removeItem(getGoogleAuthTokenKey());
-  
     setIsGoogleAuthed(false);
-    localStorage.removeItem('isGoogleAuthed');
-  
     setLoggedInGmail(null);
-    localStorage.removeItem('loggedInGmail');
-  
+
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(getGoogleAuthTokenKey());
+      localStorage.removeItem('isGoogleAuthed');
+      localStorage.removeItem('loggedInGmail');
+    }
+
     googleLogout();
   };
 
   return (
-      <GoogleAuthContext.Provider
-        value={{
-          googleAuthToken,
-          isGoogleAuthed,
-          loggedInGmail,
-          scopesApproved: isScopesApproved,
-          googleLogIn,
-          googleLogOut,
-        }}
-      >
-        {children}
-      </GoogleAuthContext.Provider>
+    <GoogleAuthContext.Provider
+      value={{
+        googleAuthToken,
+        isGoogleAuthed,
+        loggedInGmail,
+        scopesApproved: isScopesApproved,
+        googleLogIn,
+        googleLogOut,
+      }}
+    >
+      {children}
+    </GoogleAuthContext.Provider>
   );
 };
 

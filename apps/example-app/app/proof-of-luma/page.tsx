@@ -1,15 +1,31 @@
+/* eslint-disable no-unused-vars */
 "use client";
 
 import { useWalletInfo, useWeb3Modal, useWeb3ModalState } from '@web3modal/wagmi/react';
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { useWriteContract, useReadContract, useWaitForTransactionReceipt, useSwitchChain, useAccount } from "wagmi";
 import { zkERC20ABI } from '../../abis/ZKERC20';
 import { useGoogleAuth, fetchEmailList, fetchEmailsRaw, fetchProfile, useZkRegex } from "zk-regex-sdk";
+
 import { encodeAbiParameters } from 'viem';
 import PostalMime from 'postal-mime';
 
 import { sepolia } from 'viem/chains';
 import { config } from '../../config';
+
+
+export interface ContentProps {
+    entry: any
+}
+
+type RawEmailResponse = {
+    subject: string;
+    internalDate: string;
+    decodedContents: string;
+};
+
+type Email = RawEmailResponse & { selected: boolean, inputs?: any, error?: string, body?: string };
+
 
 // eslint-disable-next-line turbo/no-undeclared-env-vars
 const PROOF_OF_LUMA_ADDRESS = process.env.NEXT_PUBLIC_PROOF_OF_LUMA_ADDRESS as `0x${string}`;
@@ -23,6 +39,18 @@ export default function Home() {
   const { writeContract, data, error } = useWriteContract();
   const { isLoading, isSuccess } = useWaitForTransactionReceipt({ hash: data });
 
+  const {
+    createInputWorker,
+    generateInputFromEmail,
+    generateProofRemotely,
+    proofStatus,
+    inputWorkers,
+} = useZkRegex();
+
+
+    useEffect(() => {
+        createInputWorker('testing/luma');
+    }, [])
 //   const {data: userBalance} = useReadContract({
 //     abi: zkERC20ABI,
 //     address: PROOF_OF_LUMA_ADDRESS,
@@ -88,21 +116,21 @@ export default function Home() {
     });
   };
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>, setFileContent: Function, setFileName: Function) => {
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>, _setFileContent: Function, _setFileName: Function) => {
     const file = event.target.files?.[0];
     if (file) {
         const reader = new FileReader();
         reader.onload = async (e) => {
             const contents = e.target?.result;
-            console.log(contents);
+            // console.log(contents);
             if (typeof contents === "string") {
                 let inputs: any;
                 let error, body: string | undefined;
                 const parsed = await PostalMime.parse(contents)
                 try {
-                    inputs = await generateInputFromEmail(entry.slug, contents);
+                    inputs = await generateInputFromEmail('testing/luma', contents);
                     console.log(inputs);
-                    body = Buffer.from(inputs.emailBody).toString('utf-8');
+                    body = inputs.emailBody ? Buffer.from(inputs.emailBody).toString('utf-8') : undefined;
                 } catch (e: any) {
                     error = e.toString();
                 }
@@ -115,7 +143,9 @@ export default function Home() {
                     inputs,
                     error,
                 }
-                setMessages([...messages, email])
+                // setMessages([...messages, email])
+                console.log('email')
+                console.log(email)
             }
         }
         reader.readAsText(file);

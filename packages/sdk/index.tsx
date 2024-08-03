@@ -33,6 +33,8 @@ function ZkRegexProvider({children, clientId, zkRegexRegistryUrl}: ProvidersProp
 
   async function generateInputFromEmail(name: string, email: string) {
       const worker = inputWorkers[name];
+      console.log(`do we have a worker`)
+      console.log(worker)
       return new Promise((resolve, reject) => {
         worker.onmessage = (event: any) => {
           if (event.data.error) {
