@@ -10,9 +10,11 @@
   },
   "dependencies": {
     "@strobelabs/ui": "workspace:*",
+    "zk-regex-sdk": "workspace:*",
     "@tanstack/react-query": "^5.51.1",
     "@web3modal/wagmi": "^5.0.6",
     "next": "15.0.0-rc.0",
+    "postal-mime": "^2.2.7",
     "react": "19.0.0-rc-f994737d14-20240522",
     "react-dom": "19.0.0-rc-f994737d14-20240522",
     "viem": "2.x",
