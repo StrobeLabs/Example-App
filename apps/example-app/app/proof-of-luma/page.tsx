@@ -2,7 +2,7 @@
 "use client";
 
 import { useWalletInfo, useWeb3Modal, useWeb3ModalState } from '@web3modal/wagmi/react';
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { useWriteContract, useReadContract, useWaitForTransactionReceipt, useSwitchChain, useAccount } from "wagmi";
 import { zkERC20ABI } from '../../abis/ZKERC20';
 import { useGoogleAuth, fetchEmailList, fetchEmailsRaw, fetchProfile, useZkRegex } from "zk-regex-sdk";
@@ -46,6 +46,11 @@ export default function Home() {
     proofStatus,
     inputWorkers,
 } = useZkRegex();
+
+
+    useEffect(() => {
+        createInputWorker('testing/luma');
+    }, [])
 //   const {data: userBalance} = useReadContract({
 //     abi: zkERC20ABI,
 //     address: PROOF_OF_LUMA_ADDRESS,
