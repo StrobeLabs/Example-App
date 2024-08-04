@@ -13,7 +13,8 @@
     "deploy:example-sepolia": "source .env && forge script --chain sepolia script/ExampleContractsDeployer.s.sol:ExampleContractsDeployer --rpc-url $SEPOLIA_RPC_URL --broadcast -vvvv --slow --verify",
     "deploy:example-anvil": "forge script script/ExampleContractsDeployer.s.sol:ExampleContractsDeployer --fork-url http://localhost:8545 --broadcast",
     "deploy:zkerc20-sepolia": "source .env && forge script --chain sepolia script/ZKERC20ContractsDeployer.s.sol:ZKERC20ContractsDeployer --rpc-url $SEPOLIA_RPC_URL --broadcast -vvvv --slow --verify",
-    "deploy:zkerc20-anvil": "forge script script/ZKERC20ContractsDeployer.s.sol:ZKERC20ContractsDeployer --fork-url http://localhost:8545 --broadcast"
+    "deploy:zkerc20-anvil": "forge script script/ZKERC20ContractsDeployer.s.sol:ZKERC20ContractsDeployer --fork-url http://localhost:8545 --broadcast",
+    "deploy:zk-email-sepolia": "source .env && forge script --chain sepolia script/ZKEmailContractsDeployer.s.sol:ZKEmailContractsDeployer --rpc-url $SEPOLIA_RPC_URL --broadcast -vvvv --slow --verify"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.0.1",

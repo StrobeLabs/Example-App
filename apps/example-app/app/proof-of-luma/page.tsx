@@ -1,3 +1,4 @@
+/* eslint-disable turbo/no-undeclared-env-vars */
 /* eslint-disable no-unused-vars */
 "use client";
 
@@ -13,6 +14,9 @@ import PostalMime from 'postal-mime';
 import { sepolia } from 'viem/chains';
 import { config } from '../../config';
 import axios from 'axios';
+import { ProofTypeZKEmailABI } from '../../abis/ProofTypeZKEmail';
+// import { VerifierABI } from '../../abis/Verifier';
+// import { AlwaysTrueABI } from '../../abis/AlwaysTrue';
 
 export interface ContentProps {
     entry: any
@@ -26,9 +30,9 @@ type RawEmailResponse = {
 
 type Email = RawEmailResponse & { selected: boolean, inputs?: any, error?: string, body?: string };
 
-
-// eslint-disable-next-line turbo/no-undeclared-env-vars
 const PROOF_OF_LUMA_ADDRESS = process.env.NEXT_PUBLIC_PROOF_OF_LUMA_ADDRESS as `0x${string}`;
+const ORIGINAL_VERIFIER_ADDRESS = process.env.NEXT_PUBLIC_ORIGINAL_VERIFIER_ADDRESS as `0x${string}`;
+const ALWAYS_TRUE_VERIFIER_ADDRESS = process.env.NEXT_PUBLIC_ALWAYS_TRUE_VERIFIER_ADDRESS as `0x${string}`;
 
 export default function Home() {
   const { walletInfo } = useWalletInfo();
@@ -36,8 +40,6 @@ export default function Home() {
   const { open } = useWeb3Modal();
   const { selectedNetworkId } = useWeb3ModalState();
   const { switchChain } = useSwitchChain();
-  const { writeContract, data, error } = useWriteContract();
-  const { isLoading, isSuccess } = useWaitForTransactionReceipt({ hash: data });
 
   const {
     createInputWorker,
@@ -47,29 +49,101 @@ export default function Home() {
     inputWorkers,
 } = useZkRegex();
 
+const proofFileContent ={
+    "pi_a": [
+      "7370313145627934131602118357897898916717618578159426262946590954879756375916",
+      "6043547729046053022107211981727500814222551672524440634168509563899521706396",
+      "1"
+    ],
+    "pi_b": [
+      [
+        "2875350222504049741478121740882888432895674998925068198348757919374046279263",
+        "9062127779461192832030002477933768267498215226636695418013023415950210148142"
+      ],
+      [
+        "14835440432095150452474876822672996860158752354080400049488448201316192214054",
+        "12014482374024788210698484050763000125068570965612708037821696537993105075150"
+      ],
+      [
+        "1",
+        "0"
+      ]
+    ],
+    "pi_c": [
+      "6272976354732170410147629563150293829545252029606764442076188018565636154751",
+      "12244609440177224232358835088211848618737425096876659156296408460039021596060",
+      "1"
+    ],
+    "protocol": "groth16",
+    "curve": "bn128"
+  }
+
+const publicSignalsArr = [
+    "9283862132906206173231503844388353637958035881803629232600094123534923017779",
+    "11524861921609704033742061508122713605071039312553788599207905682035",
+    "0",
+    "0",
+    "205730529291895442492427822992419079830664464590237701454167029857395369298",
+    "111490392858735",
+    "0"
+  ]
+
+// Convert proof components to BigInt with explicit typing
+const pi_a: [bigint, bigint] = proofFileContent.pi_a.slice(0, 2).map(BigInt) as [bigint, bigint];
+const pi_b: [[bigint, bigint], [bigint, bigint]] = proofFileContent.pi_b.slice(0, 2).map(pair => 
+  pair.map(BigInt) as [bigint, bigint]
+) as [[bigint, bigint], [bigint, bigint]];
+const pi_c: [bigint, bigint] = proofFileContent.pi_c.slice(0, 2).map(BigInt) as [bigint, bigint];
+
+// Encode the proof
+const proof = encodeAbiParameters(
+  [
+    { type: 'uint256[2]' },
+    { type: 'uint256[2][2]' },
+    { type: 'uint256[2]' }
+  ],
+  [pi_a, pi_b, pi_c]
+);
+
+// Convert public signals to BigInt
+const publicSignals_bigint = publicSignalsArr.map(BigInt);
+
+// Encode public signals
+const publicSignals = encodeAbiParameters(
+  [{ type: 'uint256[]' }],
+  [publicSignals_bigint]
+);
+
+console.log('Encoded proof:', proof);
+console.log('Encoded public signals:', publicSignals);
+    
+const { data, error } = useReadContract({ 
+    address: PROOF_OF_LUMA_ADDRESS,
+    abi: ProofTypeZKEmailABI,
+    functionName: 'verify',
+    args: [
+      proof,
+      publicSignals
+    ],
+  });
+  
+    if (data) {
+    console.log('data', data);
+    }
+    if (error) {
+    console.error('error', error);
+    }
+
     useEffect(() => {
         createInputWorker('testing/luma');
     }, [])
-//   const {data: userBalance} = useReadContract({
-//     abi: zkERC20ABI,
-//     address: PROOF_OF_LUMA_ADDRESS,
-//     functionName: 'balanceOf',
-//     args: [
-//       account.address
-//     ]
-//   });
-
-  const [proofFileContent, setProofFileContent] = useState<any | null>(null);
-  const [publicFileContent, setPublicFileContent] = useState<any | null>(null);
-  const [proofFileName, setProofFileName] = useState<string | null>(null);
-  const [publicFileName, setPublicFileName] = useState<string | null>(null);
 
   const [isPolling, setIsPolling] = useState(false);
 
   const pollJobStatus = async (jobId: string) => {
     setIsPolling(true);
-    const pollInterval = 5000; // Poll every 5 seconds
-    const maxAttempts = 60; // Maximum number of attempts (5 minutes)
+    const pollInterval = 5000; 
+    const maxAttempts = 60;
     let attempts = 0;
 
     const poll = async () => {
@@ -117,48 +191,9 @@ export default function Home() {
       switchChain({ chainId: sepolia.id });
       return;
     }
-    
-    if (!proofFileContent || !publicFileContent) {
-      console.error("Please upload proof and public files");
-      return;
-    }
-
-    const { pi_a, pi_b, pi_c } = proofFileContent;
-
-    const pi_a_bigint = pi_a.slice(0, -1).map(BigInt);
-    const pi_b_bigint = pi_b.slice(0, -1).map((pair: string[]) => pair.map(BigInt));
-    const pi_c_bigint = pi_c.slice(0, -1).map(BigInt);
-
-    const publicSignals_bigint = publicFileContent.map(BigInt);
-
-    // Encoding proofA, proofB, proofC into bytes
-    const proof = encodeAbiParameters(
-      [
-        { type: 'uint256[2]' },
-        { type: 'uint256[2][2]' },
-        { type: 'uint256[2]' }
-      ],
-      [pi_a_bigint, pi_b_bigint, pi_c_bigint]
-    );
-
-    // Encoding signals into bytes
-    const publicSignals = encodeAbiParameters(
-      [{ type: 'uint256[]' }],
-      [publicSignals_bigint]
-    );
-    
-    writeContract({ 
-      abi: zkERC20ABI,
-      address: PROOF_OF_LUMA_ADDRESS,
-      functionName: 'mintWithProof',
-      args: [
-        proof,
-        publicSignals
-      ],
-    });
   };
 
-  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>, _setFileContent: Function, _setFileName: Function) => {
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -198,16 +233,15 @@ export default function Home() {
             inputs,
             error,
           };
-          _setFileContent(email);
-          _setFileName(file.name);
+        //   _setFileContent(email);
+        //   _setFileName(file.name);
         }
       };
       reader.readAsText(file);
     }
   };
 
-  return (
-    
+  return (   
     <div className="flex flex-col justify-center items-center min-h-screen bg-neutral-900">
          <div className="flex flex-col">
           <button
@@ -220,12 +254,12 @@ export default function Home() {
 
       <div className="bg-neutral-800 min-h-[100px] w-[400px] p-12 rounded-xl shadow-lg flex flex-col items-center mt-8">
         <label className="mb-4 py-4 px-12 bg-neutral-700 text-neutral-400 rounded-lg cursor-pointer hover:bg-neutral-600 hover:text-neutral-300 transition duration-300">
-          {proofFileName ? proofFileName : "Select your registration email (.eml)"}
+          {"Select your registration email (.eml)"}
           <input
             type="file"
             accept=".eml"
             className="hidden"
-            onChange={(e) => handleFileChange(e, setProofFileContent, setProofFileName)}
+            onChange={(e) => handleFileChange(e)}
           />
         </label>
     
@@ -241,29 +275,6 @@ export default function Home() {
             Polling for proof generation... Please wait.
             </div>
         )}
-        
-        {/* {isLoading && (
-          <div className="flex items-center justify-center mt-8 text-center text-neutral-400 font-bold">
-            <span className="pr-2">Submitting proof</span>
-            <div className="border-4 border-neutral-600 border-t-neutral-500 rounded-full w-4 h-4 animate-spin"></div>
-          </div>
-        )}
-        {isSuccess && (
-          <div className="text-neutral-400 font-bold mt-8 text-center">
-            <span> Tokens successfully minted ✅</span>
-            <br />
-            <a href={`https://sepolia.etherscan.io/tx/${data}`} className="underline" target="_blank" rel="noopener noreferrer">
-              View on Etherscan
-            </a>
-          </div>
-        )}
-        {error && (
-          <div className="text-neutral-400 font-bold mt-8 text-center">
-            <span> Proof submittal failure ❌</span>
-            <br />
-            <span>{error.name}</span>
-          </div>
-        )} */}
       </div>
     </div>
   );
