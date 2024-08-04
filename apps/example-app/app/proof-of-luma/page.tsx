@@ -8,15 +8,27 @@ import { useWriteContract, useReadContract, useWaitForTransactionReceipt, useSwi
 import { zkERC20ABI } from '../../abis/ZKERC20';
 import { useGoogleAuth, fetchEmailList, fetchEmailsRaw, fetchProfile, useZkRegex } from "zk-regex-sdk";
 
-import { encodeAbiParameters } from 'viem';
+
+import { encodeAbiParameters, toHex } from 'viem';
 import PostalMime from 'postal-mime';
 
 import { sepolia } from 'viem/chains';
 import { config } from '../../config';
 import axios from 'axios';
 import { ProofTypeZKEmailABI } from '../../abis/ProofTypeZKEmail';
+import { circuitOutputToArgs } from './utils';
+import { readContract } from 'viem/actions';
 // import { VerifierABI } from '../../abis/Verifier';
 // import { AlwaysTrueABI } from '../../abis/AlwaysTrue';
+
+type Proof = {
+    proof: {
+      pi_a: string[2]
+      pi_b: string[2][2]
+      pi_c: string[2]
+    };
+    public: string[]
+  }
 
 export interface ContentProps {
     entry: any
@@ -88,36 +100,31 @@ const publicSignalsArr = [
     "0"
   ]
 
-// Convert proof components to BigInt with explicit typing
-const pi_a: [bigint, bigint] = proofFileContent.pi_a.slice(0, 2).map(BigInt) as [bigint, bigint];
-const pi_b: [[bigint, bigint], [bigint, bigint]] = proofFileContent.pi_b.slice(0, 2).map(pair => 
-  pair.map(BigInt) as [bigint, bigint]
-) as [[bigint, bigint], [bigint, bigint]];
-const pi_c: [bigint, bigint] = proofFileContent.pi_c.slice(0, 2).map(BigInt) as [bigint, bigint];
+  const { pi_a, pi_b, pi_c } = proofFileContent;
 
-// Encode the proof
-const proof = encodeAbiParameters(
-  [
-    { type: 'uint256[2]' },
-    { type: 'uint256[2][2]' },
-    { type: 'uint256[2]' }
-  ],
-  [pi_a, pi_b, pi_c]
-);
+  const pi_a_bigint = pi_a.slice(0, -1).map(BigInt);
+  const pi_b_bigint = [[BigInt(pi_b[0]![1]!), BigInt(pi_b[0]![0]!)], [BigInt(pi_b[1]![1]!), BigInt(pi_b[1]![0]!)]]
+  const pi_c_bigint = pi_c.slice(0, -1).map(BigInt);
 
-// Convert public signals to BigInt
-const publicSignals_bigint = publicSignalsArr.map(BigInt);
+  const publicSignals_bigint = publicSignalsArr.map(BigInt);
 
-// Encode public signals
-const publicSignals = encodeAbiParameters(
-  [{ type: 'uint256[]' }],
-  [publicSignals_bigint]
-);
+  // Encoding proofA, proofB, proofC into bytes
+  const proof = encodeAbiParameters(
+    [
+      { type: 'uint256[2]' },
+      { type: 'uint256[2][2]' },
+      { type: 'uint256[2]' }
+    ],
+    [pi_a_bigint, pi_b_bigint, pi_c_bigint]
+  );
 
-console.log('Encoded proof:', proof);
-console.log('Encoded public signals:', publicSignals);
-    
-const { data, error } = useReadContract({ 
+  // Encoding signals into bytes
+  const publicSignals = encodeAbiParameters(
+    [{ type: 'uint256[]' }],
+    [publicSignals_bigint]
+  );
+  
+  const { data, error } = useReadContract({ 
     address: PROOF_OF_LUMA_ADDRESS,
     abi: ProofTypeZKEmailABI,
     functionName: 'verify',
@@ -126,7 +133,8 @@ const { data, error } = useReadContract({
       publicSignals
     ],
   });
-  
+
+
     if (data) {
     console.log('data', data);
     }

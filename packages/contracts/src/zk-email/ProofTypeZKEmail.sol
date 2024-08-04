@@ -1,4 +1,4 @@
-{// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.25;
 
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
@@ -63,5 +63,4 @@ contract ProofTypeZKEmail is IERC257 {
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IERC165).interfaceId || interfaceId == type(IERC257).interfaceId;
     }
-}
 }
