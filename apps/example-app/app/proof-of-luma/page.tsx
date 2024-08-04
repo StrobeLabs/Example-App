@@ -35,7 +35,7 @@ export default function Home() {
       abi: ZKCommunityABI,
       functionName: 'isUserJoined',
       args: [account.address],
-      enabled: !!account.address,
+    //   enabled: !!account.address,
     });
 
 
@@ -92,6 +92,7 @@ export default function Home() {
 
         const response = {
             data: {
+                "error": "none",
                 "id": "clzf015lo000r9d34zrigb7et",
                 "pollUrl": "/api/job/clzf015lo000r9d34zrigb7et",
                 "status": "COMPLETED",
@@ -168,22 +169,25 @@ export default function Home() {
 
   const encodeProof = useCallback((proofData: any, publicOutput: string[]) => {
     const { pi_a, pi_b, pi_c } = proofData;
-
-    const pi_a_bigint = pi_a.slice(0, -1).map(BigInt);
-    const pi_b_bigint = [[BigInt(pi_b[0][1]), BigInt(pi_b[0][0])], [BigInt(pi_b[1][1]), BigInt(pi_b[1][0])]];
-    const pi_c_bigint = pi_c.slice(0, -1).map(BigInt);
+  
+    const pi_a_bigint = pi_a.slice(0, 2).map(BigInt) as [bigint, bigint];
+    const pi_b_bigint = [
+      [BigInt(pi_b[0][1]), BigInt(pi_b[0][0])],
+      [BigInt(pi_b[1][1]), BigInt(pi_b[1][0])]
+    ] as [[bigint, bigint], [bigint, bigint]];
+    const pi_c_bigint = pi_c.slice(0, 2).map(BigInt) as [bigint, bigint];
     const publicSignals_bigint = publicOutput.map(BigInt);
-
+  
     const encodedProof = encodeAbiParameters(
       [{ type: 'uint256[2]' }, { type: 'uint256[2][2]' }, { type: 'uint256[2]' }],
       [pi_a_bigint, pi_b_bigint, pi_c_bigint]
     );
-
+  
     const encodedPublicSignals = encodeAbiParameters(
       [{ type: 'uint256[]' }],
       [publicSignals_bigint]
     );
-
+  
     setEncodedProof(encodedProof);
     setEncodedPublicSignals(encodedPublicSignals);
   }, []);
