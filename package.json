@@ -17,5 +17,9 @@
   "packageManager": "pnpm@8.15.6",
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "firebase": "^10.12.5"
   }
 }
