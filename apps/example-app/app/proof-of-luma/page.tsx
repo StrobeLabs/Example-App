@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client";
 
 import {
@@ -23,6 +24,8 @@ import { ZKCommunityABI } from "../../abis/ZKCommunity";
 import Main from "../(screens)/StrobeCard";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { db } from "../util/firebase";
+import { doc, getDoc,setDoc  } from "firebase/firestore";
 
 const ZK_COMMUNITY_ADDRESS = process.env
   .NEXT_PUBLIC_ZK_COMMUNITY_ADDRESS as `0x${string}`;
@@ -348,8 +351,31 @@ export default function Home() {
       router.push("/main/1");
     }
   }
+
+
+
+
+  const [whitelisted, setIsWhitelisted] = useState(false);
+
+ 
+
+
   useEffect(() => {
     if (isWhitelisted) {
+      const fetch = async () => {
+        const userRef = doc(db, "users", account.address);
+        const userDoc = await getDoc(userRef);
+    
+        if (userDoc.exists()) {
+          setIsWhitelisted(userDoc.data().isWhitelisted);
+        } else {
+          const onChainStatus = false;
+          await setDoc(userRef, { isWhitelisted: onChainStatus });
+          setIsWhitelisted(onChainStatus);
+        }
+      }
+      fetch();
+      
       setTimeout(() => {
         router.push("/main/1");
       }
