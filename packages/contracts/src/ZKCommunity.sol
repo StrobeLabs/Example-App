@@ -9,6 +9,7 @@ contract ZKCommunity is IERC165 {
     address public immutable verifierAddress;
 
     mapping(address => bool) public users;
+    mapping(bytes32 => bool) private _usedProofs;
 
     event UserJoined(address user);
 
@@ -17,14 +18,27 @@ contract ZKCommunity is IERC165 {
         verifierAddress = _verifierAddress;
     }
 
-    function join(bytes memory proof, bytes memory publicInputs) external {
+    function join(bytes calldata proof, bytes calldata publicInputs) external {
+        require(!isProofUsed(proof), "Proof already submitted");
         require(!users[msg.sender], "User already joined");
 
         bool success = strobeCore.submitProof(verifierAddress, proof, publicInputs);
         require(success, "Proof verification failed");
 
         users[msg.sender] = true;
+        markProofAsUsed(proof);
+
         emit UserJoined(msg.sender);
+    }
+
+    function isProofUsed(bytes calldata proof) internal view returns (bool) {
+        bytes32 proofHash = keccak256(proof);
+        return _usedProofs[proofHash];
+    }
+
+    function markProofAsUsed(bytes calldata proof) internal {
+        bytes32 proofHash = keccak256(proof);
+        _usedProofs[proofHash] = true;
     }
 
     function isUserJoined(address user) external view returns (bool) {
