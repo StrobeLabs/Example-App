@@ -1,28 +1,38 @@
 // @ts-nocheck
 "use client";
 import React, { useRef, useEffect, useState } from "react";
-import { initializeApp } from "firebase/app";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "../util/firebase";
+import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
+import { db } from "../util/firebase";
+import { useAccount } from "wagmi"; // Assuming you're using wagmi for wallet connection
+import { useReadContract } from "wagmi"; // For checking whitelist status
+import { ZKCommunityABI } from "../../abis/ZKCommunity"; // Import your ABI
 
-
-
+const ZK_COMMUNITY_ADDRESS = process.env.NEXT_PUBLIC_ZK_COMMUNITY_ADDRESS;
 
 function ChatScene() {
   const [chats, setChats] = useState([]);
-  const [isNewMessage, setIsNewMessage] = useState(false);
   const [newMessage, setNewMessage] = useState({
-    image: null,
     pseudoName: "",
     message: "",
   });
-  const [hoveredMessage, setHoveredMessage] = useState(null);
-
+  const [pseudoName, setPseudoName] = useState("");
   const canvasRef = useRef(null);
+  const account = useAccount();
+
+  // Check if user is whitelisted
+  const { data: isWhitelisted } = useReadContract({
+    address: ZK_COMMUNITY_ADDRESS,
+    abi: ZKCommunityABI,
+    functionName: "isUserJoined",
+    args: [account.address],
+  });
 
   useEffect(() => {
-    // alert("ChatScene");
+    const storedPseudoName = localStorage.getItem("pseudoName");
+    if (storedPseudoName) {
+      setPseudoName(storedPseudoName);
+    }
+
     const q = query(collection(db, "chats"), orderBy("date", "desc"));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const messages = [];
@@ -35,147 +45,96 @@ function ChatScene() {
     return () => unsubscribe();
   }, []);
 
-  const onAddPress = () => {
-    setIsNewMessage(true);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!newMessage.pseudoName || !newMessage.message) return;
-
-    let imageUrl = null;
-    if (newMessage.image) {
-      const storageRef = ref(storage, `images/${newMessage.image.name}`);
-      await uploadBytes(storageRef, newMessage.image);
-      imageUrl = await getDownloadURL(storageRef);
-    }
+    if (!isWhitelisted || !pseudoName || !newMessage.message) return;
 
     await addDoc(collection(db, "chats"), {
-      pseudoName: newMessage.pseudoName,
+      pseudoName: pseudoName,
       message: newMessage.message,
-      image: imageUrl,
       date: new Date(),
     });
 
-    setNewMessage({ image: null, pseudoName: "", message: "" });
-    setIsNewMessage(false);
+    setNewMessage({ ...newMessage, message: "" });
   };
 
-  const getRandomPosition = (canvas) => {
-    const x = Math.floor(Math.random() * (canvas.width - 40));
-    const y = Math.floor(Math.random() * (canvas.height - 40));
-    return { x, y };
-  };
-
-  const positions = React.useMemo(() => {
-    const canvas = canvasRef.current;
-    if (canvas) {
-      return chats.map(() => getRandomPosition(canvas));
+  const handlePseudoNameSubmit = (e) => {
+    e.preventDefault();
+    if (newMessage.pseudoName) {
+      setPseudoName(newMessage.pseudoName);
+      localStorage.setItem("pseudoName", newMessage.pseudoName);
+      setNewMessage({ ...newMessage, pseudoName: "" });
     }
-    return [];
-  }, [chats.length, canvasRef.current]);
+  };
+
+  const obfuscateMessage = (message) => {
+    return "*".repeat(message.length);
+  };
 
   return (
     <>
       <div className="w-[35vw] h-screen overflow-scroll absolute top-0 right-0 bg-black border-[#2C2C2C] border p-12">
-        <div className="flex justify-between">
-          <div>Chatscene</div>
-          <button
-            onClick={onAddPress}
-            className="bg-[#2C2C2C] text-white px-4 py-2 rounded-md"
-          >
-            Add Message
-          </button>
+        <div className="mb-8">
+          {!pseudoName ? (
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-6 rounded-lg shadow-lg mb-6 bg-opacity-25">
+              <h2 className="text-2xl font-bold text-white mb-4">Welcome to ChatScene!</h2>
+              <p className="text-white mb-4">Please choose a pseudoname to start chatting.</p>
+              <form onSubmit={handlePseudoNameSubmit} className="flex flex-col gap-3">
+                <input
+                  type="text"
+                  className="border-2 border-white bg-transparent text-white rounded-md p-2 focus:outline-none focus:border-yellow-300 transition duration-300"
+                  value={newMessage.pseudoName}
+                  placeholder="Enter your pseudoname"
+                  onChange={(e) => setNewMessage({ ...newMessage, pseudoName: e.target.value })}
+                />
+                <button 
+                  type="submit" 
+                  className="bg-yellow-300 text-purple-700 font-bold py-2 px-4 rounded-md hover:bg-yellow-400 transition duration-300"
+                >
+                  Set Pseudoname
+                </button>
+              </form>
+            </div>
+          ) : (
+            <div className="bg-gradient-to-r from-green-400 to-blue-500 p-4 rounded-lg shadow-md mb-6">
+              <p className="text-white font-semibold">Posting as: <span className="font-bold text-yellow-300">{pseudoName}</span></p>
+            </div>
+          )}
+          {isWhitelisted && (
+            <form onSubmit={handleSubmit} className="flex gap-2">
+              <input
+                type="text"
+                className="border border-[#2C2C2C] bg-gray-800 text-white rounded-md flex-grow p-2 focus:outline-none focus:border-blue-500 transition duration-300"
+                value={newMessage.message}
+                placeholder="Type your message"
+                onChange={(e) => setNewMessage({ ...newMessage, message: e.target.value })}
+              />
+              <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300">
+                Post
+              </button>
+            </form>
+          )}
         </div>
-        <div className="mt-14 flex flex-col gap-4">
+        <div className="flex flex-col gap-4">
           {chats.map((chat) => (
             <div
               key={chat.id}
-              className="flex gap-4 items-center rounded-xl border border-[#2C2C2C]"
+              className="flex gap-4 items-center rounded-xl border border-[#2C2C2C] bg-gray-900 p-4 hover:bg-gray-800 transition duration-300"
             >
-              {/* {chat.image && (
-                <img
-                  src={chat.image}
-                  alt="Profile"
-                  className="w-10 h-10 rounded-full"
-                />
-              )} */}
-              <div className="p-4  w-full rounded-xl">
-                <div className="text-2xl mb-4">{chat.pseudoName}</div>
-                <div >{chat.message}</div>
-                <div className="opacity-70 mt-4 text-xs">{chat.date.toDate().toDateString()}</div>
+              <div className="w-full">
+                <div className="text-xl font-semibold mb-2 text-blue-400">{chat.pseudoName}</div>
+                <div className="text-white">{isWhitelisted ? chat.message : obfuscateMessage(chat.message)}</div>
+                <div className="text-xs text-gray-400 mt-2">{chat.date.toDate().toLocaleString()}</div>
               </div>
             </div>
           ))}
         </div>
       </div>
-      <canvas
-        ref={canvasRef}
-        className="absolute top-0 left-0 w-[65vw] h-screen"
-      />
-      {isNewMessage && (
-        <div className="w-screen  h-screen absolute top-0 right-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <form onSubmit={handleSubmit} className="h-[35vh] w-[40vw] flex flex-col gap-4 bg-black">
-            <button
-              type="button"
-              className="text-red-500"
-              onClick={() => setIsNewMessage(false)}
-            >
-              close
-            </button>
-            <div>Create a post</div>
-            <div>
-              Anonymously post while attesting that you are a registered Luma
-              user
-            </div>
-            {/* <div className="flex gap-2">
-              <div>Profile Image</div>
-              <input
-                type="file"
-                accept="image/*"
-                className="border border-[#2C2C2C] rounded-md"
-                onChange={(e) => {
-                  if (!e.target.files || e.target.files?.length === 0) return;
-                  setNewMessage({
-                    ...newMessage,
-                    image: e.target.files[0],
-                  });
-                }}
-              />
-            </div> */}
-            <div className="flex gap-2">
-              <div>Pseudoname</div>
-              <input
-                type="text"
-                className="border border-[#2C2C2C] text-black rounded-md"
-                value={newMessage.pseudoName}
-                onChange={(e) => {
-                  setNewMessage({
-                    ...newMessage,
-                    pseudoName: e.target.value,
-                  });
-                }}
-              />
-            </div>
-            <div className="flex gap-2">
-              <div>Message</div>
-              <input
-                type="text"
-                className="border border-[#2C2C2C] text-black rounded-md"
-                value={newMessage.message}
-                onChange={(e) => {
-                  setNewMessage({
-                    ...newMessage,
-                    message: e.target.value,
-                  });
-                }}
-              />
-            </div>
-            <button type="submit" className="bg-[#2C2C2C] text-white px-4 py-2 rounded-md">
-              Post
-            </button>
-          </form>
-        </div>
+      {isWhitelisted && (
+        <canvas
+          ref={canvasRef}
+          className="absolute top-0 left-0 w-[65vw] h-screen"
+        />
       )}
     </>
   );
