@@ -33,7 +33,7 @@ export default function RootLayout({
           zkRegexRegistryUrl="https://registry-dev.zkregex.com"
         >
           <Web3ModalProvider initialState={initialState}>
-            <div className="flex md:hidden items-center justify-center h-screen w-screen overflow-hidden">
+            <div className="flex md:hidden p-12 text-center bg-black text-white items-center justify-center h-screen w-screen overflow-hidden">
               NOT SUPPORTED FOR MOBILE YET. PLEASE USE DESKTOP.
             </div>
             <div className="hidden md:inline">{children}</div>
