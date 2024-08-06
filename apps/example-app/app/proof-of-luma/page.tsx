@@ -33,7 +33,7 @@ const ZK_COMMUNITY_ADDRESS = process.env
 export default function Home() {
   const { walletInfo } = useWalletInfo();
   const account = useAccount();
-  const { open } = useWeb3Modal();
+  const { open, close } = useWeb3Modal();
   const { selectedNetworkId } = useWeb3ModalState();
   const { switchChain } = useSwitchChain();
   const { createInputWorker, generateInputFromEmail } = useZkRegex();
@@ -107,29 +107,29 @@ export default function Home() {
     const pollInterval = 5000;
     const maxAttempts = 60;
     let attempts = 0;
-  
+
     const poll = async () => {
       try {
         const response = await axios.get(
           `https://registry-dev.zkregex.com/api/job/${id}`
         );
         console.log("Job status:", response.data.status);
-  
+
         if (response.data.status === "COMPLETED") {
           setProof(response.data.proof);
           encodeProof(response.data.proof, response.data.publicOutput);
           setStatus("proof_ready");
           return;
         }
-  
+
         if (response.data.status === "FAILED") {
           console.error("Job failed:", response.data.error);
           setStatus("error_processing");
           return;
         }
-  
+
         setEstimatedTimeLeft(response.data.estimatedTimeLeft);
-  
+
         attempts++;
         if (attempts >= maxAttempts) {
           console.error(
@@ -138,17 +138,16 @@ export default function Home() {
           setStatus("error_processing");
           return;
         }
-  
+
         setTimeout(poll, pollInterval);
       } catch (error) {
         console.error("Error polling job status:", error);
         setStatus("error_processing");
       }
     };
-  
+
     poll();
   };
-  
 
   const encodeProof = useCallback((proofData: any, publicOutput: string[]) => {
     const { pi_a, pi_b, pi_c } = proofData;
@@ -232,7 +231,11 @@ export default function Home() {
             accept=".eml"
             className="hidden"
             onChange={handleFileChange}
-            disabled={status !== "idle" && status !== "error" && status !== "error_processing"}
+            disabled={
+              status !== "idle" &&
+              status !== "error" &&
+              status !== "error_processing"
+            }
           />
         </label>
 
@@ -262,32 +265,55 @@ export default function Home() {
     );
   };
 
-  const [estimatedTimeLeft, setEstimatedTimeLeft] = useState<number | null>(null);
+  const [estimatedTimeLeft, setEstimatedTimeLeft] = useState<number | null>(
+    null
+  );
 
+  // const renderStatus = () => {
+  //   switch (status) {
+  //     case "idle":
+  //       return "Upload an email to start the verification process.";
+  //     case "processing":
+  //       return "Processing email...";
+  //     case "polling":
+  //       return `Generating proof... Estimated time left: ${estimatedTimeLeft ? estimatedTimeLeft.toFixed(1) + ' seconds' : 'Calculating...'}`;
+  //     case "proof_ready":
+  //       return "Proof generated. Ready to join the community.";
+  //     case "joining":
+  //       return "Joining the community...";
+  //     case "error":
+  //       return "An error occurred. Please try again.";
+  //     case "error_with_proof":
+  //       return "An error occurred. You can retry joining the community without recreating the proof.";
+  //     case "error_processing":
+  //       return "An error occurred during email processing. Please check your email and try again.";
+  //     default:
+  //       return "";
+  //   }
+  // };
 
   const renderStatus = () => {
     switch (status) {
       case "idle":
-        return "Upload an email to start the verification process.";
+        return "Ready to verify! Upload your email to get started.";
       case "processing":
-        return "Processing email...";
+        return "Analyzing your email...";
       case "polling":
-        return `Generating proof... Estimated time left: ${estimatedTimeLeft ? estimatedTimeLeft.toFixed(1) + ' seconds' : 'Calculating...'}`;
+        return `Creating your unique proof... ${estimatedTimeLeft ? `About ${estimatedTimeLeft.toFixed(1)} seconds left` : "Calculating time..."}`;
       case "proof_ready":
-        return "Proof generated. Ready to join the community.";
+        return "Verification complete! You're ready to join the community.";
       case "joining":
-        return "Joining the community...";
+        return "Finalizing your membership...";
       case "error":
-        return "An error occurred. Please try again.";
+        return "Oops! Something went wrong. Let's try that again.";
       case "error_with_proof":
-        return "An error occurred. You can retry joining the community without recreating the proof.";
+        return "Oops! It looks like the Metamask transaction was rejected. Try joining again.";
       case "error_processing":
-        return "An error occurred during email processing. Please check your email and try again.";
+        return "We couldn't process that email. Double-check and try uploading again.";
       default:
         return "";
     }
   };
-  
 
   const [showRenderContent, setShowRenderContent] = useState(false);
   const [showRenderBubble, setShowRenderBubble] = useState(false);
@@ -368,7 +394,10 @@ export default function Home() {
         <>
           {!account.address ? (
             <button
-              onClick={() => open()}
+              onClick={() => {
+                close();
+                open();
+              }}
               className="p-4 bg-neutral-900 text-neutral-400 hover:bg-neutral-600 hover:text-neutral-300 transotion-all rounded-full"
             >
               Connect Wallet
@@ -383,7 +412,9 @@ export default function Home() {
                   className="hidden"
                   onChange={handleFileChange}
                   disabled={
-                    status !== "idle" && status !== "error" && status !== "error_processing"
+                    status !== "idle" &&
+                    status !== "error" &&
+                    status !== "error_processing"
                   }
                 />
               </label>
