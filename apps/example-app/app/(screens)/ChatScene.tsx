@@ -47,10 +47,10 @@ function ChatScene() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isWhitelisted || !pseudoName || !newMessage.message) return;
+    if (!isWhitelisted || !newMessage.message) return;
 
     await addDoc(collection(db, "chats"), {
-      pseudoName: pseudoName,
+      pseudoName: !pseudoName || pseudoName.trim() == "" ? "anonymous" : pseudoName,
       message: newMessage.message,
       date: new Date(),
     });

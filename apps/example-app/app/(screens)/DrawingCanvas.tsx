@@ -35,7 +35,6 @@ function DrawingCanvas() {
       querySnapshot.forEach((doc) => {
         fetchedDrawings.push(doc.data());
       });
-      console.log('Fetched drawings:', fetchedDrawings);
       setDrawings(fetchedDrawings);
     });
 
@@ -64,7 +63,6 @@ function DrawingCanvas() {
     console.log('Redrawing canvas');
     context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
     drawings.forEach((drawing, index) => {
-      console.log(`Drawing path ${index}:`, drawing.path);
       drawPath(drawing.path, drawing.color);
     });
   };

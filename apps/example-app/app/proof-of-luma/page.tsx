@@ -25,7 +25,7 @@ import Main from "../(screens)/StrobeCard";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { db } from "../util/firebase";
-import { doc, getDoc,setDoc  } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 const ZK_COMMUNITY_ADDRESS = process.env
   .NEXT_PUBLIC_ZK_COMMUNITY_ADDRESS as `0x${string}`;
@@ -97,7 +97,7 @@ export default function Home() {
         }
       } catch (error) {
         console.error("Error processing email:", error);
-        setStatus("error");
+        setStatus("error_processing");
       }
     };
     reader.readAsText(file);
@@ -107,92 +107,48 @@ export default function Home() {
     const pollInterval = 5000;
     const maxAttempts = 60;
     let attempts = 0;
-
+  
     const poll = async () => {
       try {
         const response = await axios.get(
           `https://registry-dev.zkregex.com/api/job/${id}`
         );
         console.log("Job status:", response.data.status);
-
-        // const response = {
-        //     data: {
-        //         "error": "none",
-        //         "id": "clzf015lo000r9d34zrigb7et",
-        //         "pollUrl": "/api/job/clzf015lo000r9d34zrigb7et",
-        //         "status": "COMPLETED",
-        //         "publicOutput": [
-        //             "9283862132906206173231503844388353637958035881803629232600094123534923017779",
-        //             "11524861921609704033742061508122713605071039312553788599207905682035",
-        //             "0",
-        //             "0",
-        //             "205730529291895442492427822992419079830664464590237701454167029857395369298",
-        //             "111490392858735",
-        //             "0"
-        //         ],
-        //         "proof": {
-        //             "pi_a": [
-        //                 "17616190906092919488872606965719332050166120791737966971781550097280607029561",
-        //                 "12061377783383662326624953597095032552311100548532729888467312345329819376338",
-        //                 "1"
-        //             ],
-        //             "pi_b": [
-        //                 [
-        //                     "16954475292205907536335435465812900408440417054094819692627723076006620885572",
-        //                     "12471468468032087058184828908486773032659859892715582668806761354225735117924"
-        //                 ],
-        //                 [
-        //                     "11157890399144030094259754303854924814104317217257745441914595471727786284329",
-        //                     "4700285780101052121935955055846495321949352786712249905439048426516614463762"
-        //                 ],
-        //                 [
-        //                     "1",
-        //                     "0"
-        //                 ]
-        //             ],
-        //             "pi_c": [
-        //                 "17902288821430891800709424370502744746901482877420693487026156336142149220192",
-        //                 "9463065135161127120259868138136509766400847597250253860916748798758688772940",
-        //                 "1"
-        //             ],
-        //             "protocol": "groth16",
-        //             "curve": "bn128"
-        //         },
-        //         "estimatedTimeLeft": 0
-        //     }
-        // }
-
+  
         if (response.data.status === "COMPLETED") {
           setProof(response.data.proof);
           encodeProof(response.data.proof, response.data.publicOutput);
           setStatus("proof_ready");
           return;
         }
-
+  
         if (response.data.status === "FAILED") {
           console.error("Job failed:", response.data.error);
-          setStatus("error");
+          setStatus("error_processing");
           return;
         }
-
+  
+        setEstimatedTimeLeft(response.data.estimatedTimeLeft);
+  
         attempts++;
         if (attempts >= maxAttempts) {
           console.error(
             "Max polling attempts reached. Job did not complete in time."
           );
-          setStatus("error");
+          setStatus("error_processing");
           return;
         }
-
+  
         setTimeout(poll, pollInterval);
       } catch (error) {
         console.error("Error polling job status:", error);
-        setStatus("error");
+        setStatus("error_processing");
       }
     };
-
+  
     poll();
   };
+  
 
   const encodeProof = useCallback((proofData: any, publicOutput: string[]) => {
     const { pi_a, pi_b, pi_c } = proofData;
@@ -240,7 +196,7 @@ export default function Home() {
       await refetchWhitelist();
     } catch (error) {
       console.error("Error joining community:", error);
-      setStatus("error");
+      setStatus("error_with_proof");
     }
   };
 
@@ -276,7 +232,7 @@ export default function Home() {
             accept=".eml"
             className="hidden"
             onChange={handleFileChange}
-            disabled={status !== "idle" && status !== "error"}
+            disabled={status !== "idle" && status !== "error" && status !== "error_processing"}
           />
         </label>
 
@@ -285,7 +241,10 @@ export default function Home() {
             type="button"
             className="flex justify-center items-center p-4 mt-4 bg-neutral-400 text-neutral-800 rounded-full font-bold transition duration-300 hover:bg-neutral-700 hover:text-neutral-500"
             onClick={handleJoin}
-            disabled={status !== "proof_ready" || isJoining}
+            disabled={
+              (status !== "proof_ready" && status !== "error_with_proof") ||
+              isJoining
+            }
           >
             {isJoining ? "Joining..." : "Join Community"}
           </button>
@@ -303,6 +262,9 @@ export default function Home() {
     );
   };
 
+  const [estimatedTimeLeft, setEstimatedTimeLeft] = useState<number | null>(null);
+
+
   const renderStatus = () => {
     switch (status) {
       case "idle":
@@ -310,17 +272,22 @@ export default function Home() {
       case "processing":
         return "Processing email...";
       case "polling":
-        return "Generating proof...";
+        return `Generating proof... Estimated time left: ${estimatedTimeLeft ? estimatedTimeLeft.toFixed(1) + ' seconds' : 'Calculating...'}`;
       case "proof_ready":
         return "Proof generated. Ready to join the community.";
       case "joining":
         return "Joining the community...";
       case "error":
         return "An error occurred. Please try again.";
+      case "error_with_proof":
+        return "An error occurred. You can retry joining the community without recreating the proof.";
+      case "error_processing":
+        return "An error occurred during email processing. Please check your email and try again.";
       default:
         return "";
     }
   };
+  
 
   const [showRenderContent, setShowRenderContent] = useState(false);
   const [showRenderBubble, setShowRenderBubble] = useState(false);
@@ -347,25 +314,20 @@ export default function Home() {
 
   const router = useRouter();
   const onJoin = () => {
+    refetchWhitelist();
     if (isWhitelisted) {
       router.push("/main/1");
     }
-  }
-
-
-
+  };
 
   const [whitelisted, setIsWhitelisted] = useState(false);
-
- 
-
 
   useEffect(() => {
     if (isWhitelisted) {
       const fetch = async () => {
         const userRef = doc(db, "users", account.address);
         const userDoc = await getDoc(userRef);
-    
+
         if (userDoc.exists()) {
           setIsWhitelisted(userDoc.data().isWhitelisted);
         } else {
@@ -373,13 +335,12 @@ export default function Home() {
           await setDoc(userRef, { isWhitelisted: onChainStatus });
           setIsWhitelisted(onChainStatus);
         }
-      }
+      };
       fetch();
-      
+
       setTimeout(() => {
         router.push("/main/1");
-      }
-      , 10000);
+      }, 10000);
     }
   }, [isWhitelisted]);
 
@@ -421,7 +382,9 @@ export default function Home() {
                   accept=".eml"
                   className="hidden"
                   onChange={handleFileChange}
-                  disabled={status !== "idle" && status !== "error"}
+                  disabled={
+                    status !== "idle" && status !== "error" && status !== "error_processing"
+                  }
                 />
               </label>
 
@@ -429,16 +392,21 @@ export default function Home() {
                 {renderStatus()}
               </div>
 
-              {file && status == "proof_ready" && (
-                <button
-                  type="button"
-                  className="flex justify-center items-center p-4 mt-4 bg-neutral-400 text-neutral-800 rounded-full font-bold transition duration-300 hover:bg-neutral-700 hover:text-neutral-500"
-                  onClick={handleJoin}
-                  disabled={status !== "proof_ready" || isJoining}
-                >
-                  {isJoining ? "Joining..." : "Join Community"}
-                </button>
-              )}
+              {file &&
+                (status == "proof_ready" || status == "error_with_proof") && (
+                  <button
+                    type="button"
+                    className="flex justify-center items-center p-4 mt-4 bg-neutral-400 text-neutral-800 rounded-full font-bold transition duration-300 hover:bg-neutral-700 hover:text-neutral-500"
+                    onClick={handleJoin}
+                    disabled={
+                      (status !== "proof_ready" &&
+                        status !== "error_with_proof") ||
+                      isJoining
+                    }
+                  >
+                    {isJoining ? "Joining..." : "Join Community"}
+                  </button>
+                )}
             </>
           )}
         </>
@@ -448,26 +416,12 @@ export default function Home() {
 
   return (
     <Main>
-     
-      {/* {showRenderBubble && (
-        <div
-          className={` flex-col flex justify-center items-center min-h-screen duration-1000 transition-all absolute top-0 left-0 w-screen`}
-        >
-          <div
-            className={`bg-neutral-800 min-h-[100px] w-[400px] p-12 rounded-xl shadow-lg flex flex-col items-center mt-8 duration-1000 transition-all ${
-              showRenderContent ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            {renderContent()}
-          </div>
-        </div>
-      )} */}
       <div className="absolute bottom-6 left-0 right-0 flex items-center text-white justify-center">
         <div
           className="cursor-pointer text-xs opacity-60 animate-pulse"
           onClick={() => onJoin()}
         >
-         press here to go to chat room or wait in a few seconds
+          press here to go to chat room or wait in a few seconds
         </div>
       </div>
     </Main>
