@@ -20,15 +20,15 @@ import PostalMime from "postal-mime";
 import { sepolia } from "viem/chains";
 import axios from "axios";
 
-import { ZKCommunityABI } from "../../abis/ZKCommunity";
+import { ProofOfLumaRegistryABI } from "../../abis/ProofOfLumaRegistry";
 import Main from "../(screens)/StrobeCard";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { db } from "../util/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
-const ZK_COMMUNITY_ADDRESS = process.env
-  .NEXT_PUBLIC_ZK_COMMUNITY_ADDRESS as `0x${string}`;
+const PROOF_OF_LUMA_REGISTRY_ADDRESS = process.env
+  .NEXT_PUBLIC_PROOF_OF_LUMA_REGISTRY_ADDRESS as `0x${string}`;
 
 export default function Home() {
   const { walletInfo } = useWalletInfo();
@@ -49,8 +49,8 @@ export default function Home() {
 
   // Check if user is whitelisted
   const { data: isWhitelisted, refetch: refetchWhitelist } = useReadContract({
-    address: ZK_COMMUNITY_ADDRESS,
-    abi: ZKCommunityABI,
+    address: PROOF_OF_LUMA_REGISTRY_ADDRESS,
+    abi: ProofOfLumaRegistryABI,
     functionName: "isUserJoined",
     args: [account.address],
     //   enabled: !!account.address,
@@ -185,8 +185,8 @@ export default function Home() {
     console.log("encodedPublicSignals", encodedPublicSignals);
     try {
       await joinCommunity({
-        address: ZK_COMMUNITY_ADDRESS,
-        abi: ZKCommunityABI,
+        address: PROOF_OF_LUMA_REGISTRY_ADDRESS,
+        abi: ProofOfLumaRegistryABI,
         functionName: "join",
         args: [encodedProof, encodedPublicSignals],
       });

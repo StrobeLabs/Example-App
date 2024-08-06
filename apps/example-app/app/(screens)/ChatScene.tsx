@@ -6,10 +6,10 @@ import { db, storage } from "../util/firebase"; // Import storage from Firebase
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"; // Import storage functions
 import { useAccount } from "wagmi"; // Assuming you're using wagmi for wallet connection
 import { useReadContract } from "wagmi"; // For checking whitelist status
-import { ZKCommunityABI } from "../../abis/ZKCommunity"; // Import your ABI
+import { ProofOfLumaRegistryABI } from "../../abis/ProofOfLumaRegistry"; // Import your ABI
 import Image from "next/image";
 
-const ZK_COMMUNITY_ADDRESS = process.env.NEXT_PUBLIC_ZK_COMMUNITY_ADDRESS;
+const PROOF_OF_LUMA_REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_PROOF_OF_LUMA_REGISTRY_ADDRESS;
 
 function ChatScene({
   onMouseLeave,
@@ -31,8 +31,8 @@ function ChatScene({
 
   // Check if user is whitelisted
   const { data: isWhitelisted } = useReadContract({
-    address: ZK_COMMUNITY_ADDRESS,
-    abi: ZKCommunityABI,
+    address: PROOF_OF_LUMA_REGISTRY_ADDRESS,
+    abi: ProofOfLumaRegistryABI,
     functionName: "isUserJoined",
     args: [account.address],
   });

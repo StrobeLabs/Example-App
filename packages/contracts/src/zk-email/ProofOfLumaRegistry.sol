@@ -4,7 +4,7 @@ pragma solidity >=0.8.25;
 import {IStrobeCore} from "@strobelabs/contracts/src/core/interfaces/IStrobeCore.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-contract ZKCommunity is IERC165 {
+contract ProofOfLumaRegistry is IERC165 {
     IStrobeCore public immutable strobeCore;
     address public immutable verifierAddress;
 
