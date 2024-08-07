@@ -3,6 +3,7 @@
 
 import React, { useState, ChangeEvent, useEffect, useCallback } from "react";
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
+import { waitForTransaction } from '@wagmi/core'
 import { useWeb3Modal } from "@web3modal/wagmi/react";
 import { useZkRegex } from "zk-regex-sdk";
 import { encodeAbiParameters } from "viem";
@@ -87,7 +88,6 @@ export default function Home() {
   useEffect(() => {
     async function processLocalProof() {
       if (proofFile && publicOutputFile) {
-        console.log("Both proof and public output files are set.");
         setStatus("processing");
         try {
           const proofContent = await readFileContent(proofFile);
@@ -137,8 +137,6 @@ export default function Home() {
         const response = await axios.get(
           `https://registry-dev.zkregex.com/api/job/${id}`
         );
-
-        console.log("Job status:", response.data.status);
   
         if (response.data.status === "COMPLETED") {
           console.log("Proof generation completed");
@@ -222,17 +220,29 @@ export default function Home() {
   const handleJoin = async () => {
     if (!encodedProof || !encodedPublicSignals) return;
     try {
-      await joinCommunity({
+      const result = await joinCommunity({
         address: PROOF_OF_LUMA_REGISTRY_ADDRESS,
         abi: ProofOfLumaRegistryABI,
         functionName: "join",
         args: [encodedProof, encodedPublicSignals],
       });
       setStatus("joining");
-      await refetchWhitelist();
+      await waitForTransaction({ hash: result.hash });
+      const { data: newWhitelistStatus } = await refetchWhitelist();
+      if (newWhitelistStatus) {
+        router.push("/main/1");
+      }
     } catch (error) {
       console.error("Error joining community:", error);
-      setStatus("error_with_proof");
+      if (error.name == "ContractFunctionExecutionError" || 
+          error.name == "ContractFunctionRevertedError") {
+        setStatus("contract_error");
+      } else if (error.message.includes("rejected")) {
+        setStatus("transaction_rejected");
+      } else {
+        setStatus("error_with_proof");
+      }
+
     }
   };
 
@@ -254,6 +264,10 @@ export default function Home() {
         return "Oops! It looks like the Metamask transaction was rejected. Try joining again.";
       case "error_processing":
         return "We couldn't process that email. Double-check and try uploading again.";
+      case "contract_error":
+        return "The contract rejected the join request. You may have already joined or the proof might be invalid.";
+      case "transaction_rejected":
+        return "The transaction was rejected. Please try joining again.";
       default:
         return "";
     }
@@ -376,12 +390,12 @@ export default function Home() {
             </div>
 
             {((proofMethod === "remote" && file) || (proofMethod === "local" && proofFile && publicOutputFile)) &&
-              (status === "proof_ready" || status === "error_with_proof") && (
+              (status === "proof_ready" || status === "error_with_proof" || status === "contract_error" || status === "transaction_rejected") && (
                 <button
                   type="button"
                   className="flex justify-center items-center p-4 mt-4 bg-neutral-400 text-neutral-800 rounded-full font-bold transition duration-300 hover:bg-neutral-700 hover:text-neutral-500"
                   onClick={handleJoin}
-                  disabled={(status !== "proof_ready" && status !== "error_with_proof") || isJoining}
+                  disabled={status !== "proof_ready" && status !== "error_with_proof" && status !== "contract_error" && status !== "transaction_rejected" || isJoining}
                 >
                   {isJoining ? "Joining..." : "Join Community"}
                 </button>
