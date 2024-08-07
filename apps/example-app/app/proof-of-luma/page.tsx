@@ -20,7 +20,7 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 const PROOF_OF_LUMA_REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_PROOF_OF_LUMA_REGISTRY_ADDRESS as `0x${string}`;
 
 export default function Home() {
-  const { account, isConnected } = useAccount();
+  const { account, isConnected, address } = useAccount();
   const { open, /* close */ } = useWeb3Modal();
   const { createInputWorker, generateInputFromEmail } = useZkRegex();
   const router = useRouter();
@@ -38,12 +38,13 @@ export default function Home() {
   const [selectedPublicOutputFileName, setSelectedPublicOutputFileName] = useState<string | null>(null);
   const [setIsWhitelisted] = useState(false);
 
-  const { data: isWhitelisted, refetch: refetchWhitelist } = useReadContract({
+  const { data: isWhitelisted, refetch: refetchWhitelist} = useReadContract({
     address: PROOF_OF_LUMA_REGISTRY_ADDRESS,
     abi: ProofOfLumaRegistryABI,
     functionName: "isUserJoined",
-    args: [account?.address],
-  });
+    args: [address],
+    enabled: address
+});
 
   const { writeContractAsync: joinCommunity, isPending: isJoining } = useWriteContract();
 
@@ -227,7 +228,6 @@ export default function Home() {
         args: [encodedProof, encodedPublicSignals],
       });
       setStatus("joining");
-      await waitForTransaction({ hash: result.hash });
       const { data: newWhitelistStatus } = await refetchWhitelist();
       if (newWhitelistStatus) {
         router.push("/main/1");
@@ -274,28 +274,29 @@ export default function Home() {
   };
 
   useEffect(() => {
+    console.log(`isWhitelisted: ${isWhitelisted} address :$ ${address}`)
     if (isWhitelisted) {
+      console.log(`isWhitelisted: ${isWhitelisted} address :$ ${address}`)
       const fetch = async () => {
-        const userRef = doc(db, "users", account.address);
+        const userRef = doc(db, "users", address);
         const userDoc = await getDoc(userRef);
-
+    
         if (userDoc.exists()) {
-          setIsWhitelisted(userDoc.data().isWhitelisted);
+          // pass
         } else {
           const onChainStatus = false;
           await setDoc(userRef, { isWhitelisted: onChainStatus });
-          setIsWhitelisted(onChainStatus);
         }
       };
       fetch();
-
+    
       setTimeout(() => {
         router.push("/main/1");
-      }, 3000);
+      }, 10000);
     }
-  }, [isWhitelisted]);
+    }, [isWhitelisted, address]);
 
-  if (!isWhitelisted || !account?.address) {
+  if (!isWhitelisted) {
     return (
       <div className="flex-col flex gap-6 bg-black justify-center items-center min-h-screen duration-1000 transition-all absolute top-0 left-0 w-screen">
         <Image
@@ -306,12 +307,13 @@ export default function Home() {
           alt="art"
         />
           {!isConnected ? (
-            <button
-              onClick={open}
-              className="p-4 bg-neutral-900 text-neutral-400 hover:bg-neutral-600 hover:text-neutral-300 transition-all rounded-full"
-            >
-              Connect Wallet
-            </button>
+            <w3m-button />
+            // <button
+            //   onClick={open}
+            //   className="p-4 bg-neutral-900 text-neutral-400 hover:bg-neutral-600 hover:text-neutral-300 transition-all rounded-full"
+            // >
+            //   Connect Wallet
+            // </button>
           ) : (
             <div className="text-neutral-400">
               {isWhitelisted ? (
