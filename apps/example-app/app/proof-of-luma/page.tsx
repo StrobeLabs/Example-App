@@ -2,8 +2,8 @@
 "use client";
 
 import React, { useState, ChangeEvent, useEffect, useCallback } from "react";
-import { useAccount, useReadContract, useWriteContract, useSwitchChain } from "wagmi";
-import { useWeb3Modal, useWeb3ModalState, useWalletInfo } from "@web3modal/wagmi/react";
+import { useAccount, useReadContract, useWriteContract } from "wagmi";
+import { useWeb3Modal } from "@web3modal/wagmi/react";
 import { useZkRegex } from "zk-regex-sdk";
 import { encodeAbiParameters } from "viem";
 import PostalMime from "postal-mime";
@@ -19,8 +19,8 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 const PROOF_OF_LUMA_REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_PROOF_OF_LUMA_REGISTRY_ADDRESS as `0x${string}`;
 
 export default function Home() {
-  const { account, address, isConnected } = useAccount();
-  const { open, close } = useWeb3Modal();
+  const { account, isConnected } = useAccount();
+  const { open, /* close */ } = useWeb3Modal();
   const { createInputWorker, generateInputFromEmail } = useZkRegex();
   const router = useRouter();
 
@@ -35,7 +35,7 @@ export default function Home() {
   
   const [selectedProofFileName, setSelectedProofFileName] = useState<string | null>(null);
   const [selectedPublicOutputFileName, setSelectedPublicOutputFileName] = useState<string | null>(null);
-  const [whitelisted, setIsWhitelisted] = useState(false);
+  const [setIsWhitelisted] = useState(false);
 
   const { data: isWhitelisted, refetch: refetchWhitelist } = useReadContract({
     address: PROOF_OF_LUMA_REGISTRY_ADDRESS,
