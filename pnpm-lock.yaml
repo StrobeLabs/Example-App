@@ -119,6 +119,100 @@ importers:
         specifier: ^5
         version: 5.4.5
 
+  apps/proof-of-luma:
+    dependencies:
+      '@react-three/drei':
+        specifier: ^9.109.2
+        version: 9.109.2(@react-three/fiber@8.16.8)(@types/react@18.3.3)(@types/three@0.167.1)(react-dom@18.3.1)(react@18.3.1)(three@0.167.1)
+      '@react-three/fiber':
+        specifier: ^8.16.8
+        version: 8.16.8(react-dom@18.3.1)(react-native@0.74.3)(react@18.3.1)(three@0.167.1)
+      '@react-three/rapier':
+        specifier: ^1.4.0
+        version: 1.4.0(@react-three/fiber@8.16.8)(react@18.3.1)(three@0.167.1)
+      '@strobelabs/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      '@tanstack/query-core':
+        specifier: ^5.51.21
+        version: 5.51.21
+      '@tanstack/react-query':
+        specifier: ^5.51.1
+        version: 5.51.9(react@18.3.1)
+      '@wagmi/core':
+        specifier: ^2.13.3
+        version: 2.13.3(@tanstack/query-core@5.51.21)(@types/react@18.3.3)(react@18.3.1)(typescript@5.4.5)(viem@2.17.5)
+      '@web3modal/wagmi':
+        specifier: ^5.0.6
+        version: 5.0.7(@types/react@18.3.3)(@wagmi/connectors@5.0.26)(@wagmi/core@2.13.3)(react-dom@18.3.1)(react@18.3.1)(viem@2.17.5)
+      axios:
+        specifier: ^1.7.3
+        version: 1.7.3
+      leva:
+        specifier: ^0.9.35
+        version: 0.9.35(@types/react-dom@18.2.19)(@types/react@18.3.3)(react-dom@18.3.1)(react@18.3.1)
+      meshline:
+        specifier: ^3.3.1
+        version: 3.3.1(three@0.167.1)
+      next:
+        specifier: '14'
+        version: 14.2.5(@babel/core@7.23.3)(react-dom@18.3.1)(react@18.3.1)
+      postal-mime:
+        specifier: ^2.2.7
+        version: 2.2.7
+      react:
+        specifier: ^18
+        version: 18.3.1
+      react-dom:
+        specifier: ^18
+        version: 18.3.1(react@18.3.1)
+      three:
+        specifier: ^0.167.1
+        version: 0.167.1
+      viem:
+        specifier: 2.x
+        version: 2.17.5(typescript@5.4.5)
+      wagmi:
+        specifier: ^2.10.10
+        version: 2.11.3(@tanstack/query-core@5.51.21)(@tanstack/react-query@5.51.9)(@types/react@18.3.3)(react-dom@18.3.1)(react-native@0.74.3)(react@18.3.1)(typescript@5.4.5)(viem@2.17.5)
+      zk-regex-sdk:
+        specifier: workspace:*
+        version: link:../../packages/sdk
+    devDependencies:
+      '@strobelabs/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@strobelabs/typescript-config':
+        specifier: workspace:*
+        version: link:../../packages/typescript-config
+      '@types/node':
+        specifier: ^20
+        version: 20.11.24
+      '@types/react':
+        specifier: ^18
+        version: 18.3.3
+      '@types/react-dom':
+        specifier: ^18
+        version: 18.2.19
+      autoprefixer:
+        specifier: ^10.4.19
+        version: 10.4.19(postcss@8.4.39)
+      eslint:
+        specifier: ^8
+        version: 8.57.0
+      eslint-config-next:
+        specifier: 15.0.0-rc.0
+        version: 15.0.0-rc.0(eslint@8.57.0)(typescript@5.4.5)
+      postcss:
+        specifier: ^8.4.39
+        version: 8.4.39
+      tailwindcss:
+        specifier: ^3.4.6
+        version: 3.4.6
+      typescript:
+        specifier: ^5
+        version: 5.4.5
+
   packages/contracts:
     dependencies:
       '@openzeppelin/contracts':

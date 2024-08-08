@@ -12,9 +12,9 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ProofOfLumaRegistryABI } from "../../abis/ProofOfLumaRegistry";
-import Main from "../(screens)/StrobeCard";
-import { db } from "../util/firebase";
+import { ProofOfLumaRegistryABI } from "./../abis/ProofOfLumaRegistry";
+import Main from "./(screens)/StrobeCard";
+import { db } from "./util/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
 const PROOF_OF_LUMA_REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_PROOF_OF_LUMA_REGISTRY_ADDRESS as `0x${string}`;
