@@ -4,7 +4,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 
 import { cookieToInitialState } from "wagmi";
-
+import { Analytics } from "@vercel/analytics/react"
 import { config } from "../config";
 import Web3ModalProvider from "../context";
 import { ZkRegexProvider } from "zk-regex-sdk";
@@ -26,6 +26,7 @@ export default function RootLayout({
 
   return (
     <html lang="en">
+      <Analytics/>
       <body className={inter.className}>
         <ZkRegexProvider
           clientId={
