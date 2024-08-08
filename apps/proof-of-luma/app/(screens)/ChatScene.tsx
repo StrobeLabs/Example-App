@@ -22,7 +22,7 @@ const PROOF_OF_LUMA_REGISTRY_ADDRESS =
 function ChatScene({
   onMouseLeave,
   onMouseEnter,
-  onClick
+  onClick,
 }: {
   onMouseLeave: () => void;
   onMouseEnter: () => void;
@@ -83,11 +83,6 @@ function ChatScene({
     // Check if a message media is stored in local storage
     const storedMessageMediaURL = localStorage.getItem("messageMediaURL");
 
-    if (!storedMessageMediaURL) {
-      alert("Please upload an image or GIF for your message background.");
-      return;
-    }
-
     // Upload profile photo if a new one is selected
     if (profilePhoto) {
       const storageRef = ref(storage, `profilePhotos/${account.address}`);
@@ -103,7 +98,7 @@ function ChatScene({
       message: newMessage.message,
       date: new Date(),
       profilePhotoURL: profilePhotoURL || "",
-      messageImageURL: storedMessageMediaURL,
+      messageImageURL: storedMessageMediaURL || "", // Set to empty string if no media
     });
 
     setNewMessage({ ...newMessage, message: "" });

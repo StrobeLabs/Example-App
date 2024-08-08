@@ -18,10 +18,21 @@ const ToggleableForm = ({
   isWhitelisted,
 }) => {
   const [isFormVisible, setIsFormVisible] = useState(false);
+  const [isEditingPseudoName, setIsEditingPseudoName] = useState(false);
 
   const toggleFormVisibility = () => {
     console.log("Toggling form visibility");
     setIsFormVisible(!isFormVisible);
+  };
+
+  const toggleEditPseudoName = () => {
+    setIsEditingPseudoName(!isEditingPseudoName);
+  };
+
+  const handlePseudoNameUpdate = (e) => {
+    e.preventDefault();
+    handlePseudoNameSubmit(e);
+    setIsEditingPseudoName(false);
   };
 
   return (
@@ -35,16 +46,18 @@ const ToggleableForm = ({
       {isFormVisible &&
         (isWhitelisted ? (
           <div className="mt-4 bg-gray-900 p-4 rounded-md">
-            {!pseudoName ? (
+            {!pseudoName || isEditingPseudoName ? (
               <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-6 rounded-lg shadow-lg mb-6 bg-opacity-25">
                 <h2 className="text-2xl font-bold text-white mb-4">
-                  Welcome to ChatScene!
+                  {pseudoName ? "Edit your pseudoname" : "Welcome to ChatScene!"}
                 </h2>
                 <p className="text-white mb-4">
-                  Please choose a pseudoname to start chatting.
+                  {pseudoName
+                    ? "Update your pseudoname."
+                    : "Please choose a pseudoname to start chatting."}
                 </p>
                 <form
-                  onSubmit={handlePseudoNameSubmit}
+                  onSubmit={handlePseudoNameUpdate}
                   className="flex flex-col gap-3"
                 >
                   <label htmlFor="pseudoName" className="text-white">
@@ -67,7 +80,7 @@ const ToggleableForm = ({
                     type="submit"
                     className="bg-yellow-300 text-purple-700 font-bold py-2 px-4 rounded-md hover:bg-yellow-400 transition duration-300"
                   >
-                    Set Pseudoname
+                    {pseudoName ? "Update Pseudoname" : "Set Pseudoname"}
                   </button>
                 </form>
               </div>
@@ -78,6 +91,12 @@ const ToggleableForm = ({
                   <span className="font-bold text-yellow-300">
                     {pseudoName}
                   </span>
+                  <button
+                    onClick={toggleEditPseudoName}
+                    className="ml-4 text-sm text-blue-300 underline hover:text-blue-500"
+                  >
+                    Edit
+                  </button>
                 </p>
                 {!profilePhotoURL && (
                   <div className="mt-4">
@@ -96,7 +115,7 @@ const ToggleableForm = ({
             )}
             {isWhitelisted && (
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                <label htmlFor="messageMedia" className="text-white">
+                <label htmlFor="messageMedia" className="text-white opacity-50 text-sm">
                   Upload Image/GIF as message background (optional)
                 </label>
                 <input

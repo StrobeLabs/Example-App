@@ -13,6 +13,8 @@ import {
   query,
   updateDoc,
   doc,
+  setDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db } from "../util/firebase";
@@ -329,6 +331,20 @@ function DrawingCanvas() {
     };
   };
 
+  const triggerConfetti = async () => {
+    const confettiRef = doc(db, "confetti", "global");
+
+    try {
+      await updateDoc(confettiRef, { timestamp: serverTimestamp() });
+    } catch (error) {
+      if (error.code === "not-found") {
+        await setDoc(confettiRef, { timestamp: serverTimestamp() });
+      } else {
+        console.error("Error updating confetti document: ", error);
+      }
+    }
+  };
+
   return (
     <div className="relative w-full h-full hidden md:inline-block">
       <canvas
@@ -351,15 +367,32 @@ function DrawingCanvas() {
       {!isWhitelisted || isWhitelisted == false ? (
         <></>
       ) : (
-        <label className="absolute top-4 left-4 z-20 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded cursor-pointer transition duration-300 ease-in-out">
-          Upload Image
-          <input
-            type="file"
-            accept="image/*,image/gif"
-            onChange={handleFileUpload}
-            className="hidden"
-          />
-        </label>
+        <>
+          <label className="absolute top-4 left-4 z-20 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded cursor-pointer transition duration-300 ease-in-out">
+            Upload Image
+            <input
+              type="file"
+              accept="image/*,image/gif"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+          </label>
+        </>
+      )}
+
+      {!isWhitelisted || isWhitelisted == false ? (
+        <></>
+      ) : (
+        <>
+          <label
+            onClick={triggerConfetti}
+            className="absolute 
+          
+          top-4 left-44 z-20 bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded cursor-pointer transition duration-300 ease-in-out"
+          >
+            <button onClick={triggerConfetti}>😩</button>
+          </label>
+        </>
       )}
     </div>
   );
