@@ -20,6 +20,7 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 const PROOF_OF_LUMA_REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_PROOF_OF_LUMA_REGISTRY_ADDRESS as `0x${string}`;
 
 export default function Home() {
+  
   const { account, isConnected, address } = useAccount();
   const { open, /* close */ } = useWeb3Modal();
   const { createInputWorker, generateInputFromEmail } = useZkRegex();
