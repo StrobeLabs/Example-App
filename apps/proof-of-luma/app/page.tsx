@@ -3,7 +3,7 @@
 
 import React, { useState, ChangeEvent, useEffect, useCallback } from "react";
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
-import { waitForTransaction } from '@wagmi/core'
+import { waitForTransaction } from "@wagmi/core";
 import { useWeb3Modal } from "@web3modal/wagmi/react";
 import { useZkRegex } from "zk-regex-sdk";
 import { encodeAbiParameters } from "viem";
@@ -17,37 +17,47 @@ import Main from "./(screens)/StrobeCard";
 import { db } from "./util/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
-const PROOF_OF_LUMA_REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_PROOF_OF_LUMA_REGISTRY_ADDRESS as `0x${string}`;
+const PROOF_OF_LUMA_REGISTRY_ADDRESS = process.env
+  .NEXT_PUBLIC_PROOF_OF_LUMA_REGISTRY_ADDRESS as `0x${string}`;
 
 export default function Home() {
-  
   const { account, isConnected, address } = useAccount();
-  const { open, /* close */ } = useWeb3Modal();
+  const { open /* close */ } = useWeb3Modal();
   const { createInputWorker, generateInputFromEmail } = useZkRegex();
   const router = useRouter();
 
   const [status, setStatus] = useState("idle");
-  const [proofMethod, setProofMethod] = useState<"remote" | "local" | null>(null);
+  const [proofMethod, setProofMethod] = useState<"remote" | "local" | null>(
+    null
+  );
   const [file, setFile] = useState<File | null>(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [publicOutputFile, setPublicOutputFile] = useState<File | null>(null);
   const [encodedProof, setEncodedProof] = useState<`0x${string}` | null>(null);
-  const [encodedPublicSignals, setEncodedPublicSignals] = useState<`0x${string}` | null>(null);
-  const [estimatedTimeLeft, setEstimatedTimeLeft] = useState<number | null>(null);
-  
-  const [selectedProofFileName, setSelectedProofFileName] = useState<string | null>(null);
-  const [selectedPublicOutputFileName, setSelectedPublicOutputFileName] = useState<string | null>(null);
+  const [encodedPublicSignals, setEncodedPublicSignals] = useState<
+    `0x${string}` | null
+  >(null);
+  const [estimatedTimeLeft, setEstimatedTimeLeft] = useState<number | null>(
+    null
+  );
+
+  const [selectedProofFileName, setSelectedProofFileName] = useState<
+    string | null
+  >(null);
+  const [selectedPublicOutputFileName, setSelectedPublicOutputFileName] =
+    useState<string | null>(null);
   const [setIsWhitelisted] = useState(false);
 
-  const { data: isWhitelisted, refetch: refetchWhitelist} = useReadContract({
+  const { data: isWhitelisted, refetch: refetchWhitelist } = useReadContract({
     address: PROOF_OF_LUMA_REGISTRY_ADDRESS,
     abi: ProofOfLumaRegistryABI,
     functionName: "isUserJoined",
     args: [address],
-    enabled: address
-});
+    enabled: address,
+  });
 
-  const { writeContractAsync: joinCommunity, isPending: isJoining } = useWriteContract();
+  const { writeContractAsync: joinCommunity, isPending: isJoining } =
+    useWriteContract();
 
   useEffect(() => {
     createInputWorker("testing/luma");
@@ -73,7 +83,10 @@ export default function Home() {
       try {
         await PostalMime.parse(contents);
         const inputs = await generateInputFromEmail("testing/luma", contents);
-        const response = await axios.post("https://registry-dev.zkregex.com/api/proof/testing/luma", inputs);
+        const response = await axios.post(
+          "https://registry-dev.zkregex.com/api/proof/testing/luma",
+          inputs
+        );
         if (response.data.id) {
           pollJobStatus(response.data.id);
           setStatus("polling");
@@ -94,7 +107,10 @@ export default function Home() {
         try {
           const proofContent = await readFileContent(proofFile);
           const publicOutputContent = await readFileContent(publicOutputFile);
-          encodeProof(JSON.parse(proofContent), JSON.parse(publicOutputContent));
+          encodeProof(
+            JSON.parse(proofContent),
+            JSON.parse(publicOutputContent)
+          );
           setStatus("proof_ready");
         } catch (error) {
           console.error("Error processing local proof files:", error);
@@ -106,12 +122,15 @@ export default function Home() {
     processLocalProof();
   }, [proofFile, publicOutputFile]);
 
-  const handleLocalProof = async (event: ChangeEvent<HTMLInputElement>, fileType: 'proof' | 'publicOutput') => {
+  const handleLocalProof = async (
+    event: ChangeEvent<HTMLInputElement>,
+    fileType: "proof" | "publicOutput"
+  ) => {
     const file = event.target.files?.[0];
     if (!file) {
       return;
     }
-    if (fileType === 'proof') {
+    if (fileType === "proof") {
       setProofFile(file);
       setSelectedProofFileName(file.name);
     } else {
@@ -133,28 +152,31 @@ export default function Home() {
     const pollInterval = 5000;
     const maxAttempts = 60;
     let attempts = 0;
-  
+
     const poll = async () => {
       try {
         const response = await axios.get(
           `https://registry-dev.zkregex.com/api/job/${id}`
         );
-  
+
         if (response.data.status === "COMPLETED") {
           console.log("Proof generation completed");
           encodeProof(response.data.proof, response.data.publicOutput);
           setStatus("proof_ready");
           return;
         }
-  
-        if (response.data.status === "FAILED" || response.data.status === "ERROR") {
+
+        if (
+          response.data.status === "FAILED" ||
+          response.data.status === "ERROR"
+        ) {
           console.error("Job failed:", response.data.error);
           setStatus("error_processing");
           return;
         }
-  
+
         setEstimatedTimeLeft(response.data.estimatedTimeLeft);
-  
+
         attempts++;
         if (attempts >= maxAttempts) {
           console.error(
@@ -163,14 +185,14 @@ export default function Home() {
           setStatus("error_processing");
           return;
         }
-  
+
         setTimeout(poll, pollInterval);
       } catch (error) {
         console.error("Error polling job status:", error);
         setStatus("error_processing");
       }
     };
-  
+
     poll();
   };
 
@@ -184,7 +206,7 @@ export default function Home() {
     setSelectedProofFileName(null);
     setSelectedPublicOutputFileName(null);
   }, []);
-  
+
   const handleProofMethodChange = (method: "remote" | "local") => {
     setProofMethod(method);
     resetState();
@@ -192,7 +214,7 @@ export default function Home() {
 
   const encodeProof = useCallback((proofData: any, publicOutput: string[]) => {
     const { pi_a, pi_b, pi_c } = proofData;
-  
+
     const pi_a_bigint = pi_a.slice(0, 2).map(BigInt) as [bigint, bigint];
     const pi_b_bigint = [
       [BigInt(pi_b[0][1]), BigInt(pi_b[0][0])],
@@ -200,7 +222,7 @@ export default function Home() {
     ] as [[bigint, bigint], [bigint, bigint]];
     const pi_c_bigint = pi_c.slice(0, 2).map(BigInt) as [bigint, bigint];
     const publicSignals_bigint = publicOutput.map(BigInt);
-  
+
     const encodedProof = encodeAbiParameters(
       [
         { type: "uint256[2]" },
@@ -209,12 +231,12 @@ export default function Home() {
       ],
       [pi_a_bigint, pi_b_bigint, pi_c_bigint]
     );
-  
+
     const encodedPublicSignals = encodeAbiParameters(
       [{ type: "uint256[]" }],
       [publicSignals_bigint]
     );
-  
+
     setEncodedProof(encodedProof);
     setEncodedPublicSignals(encodedPublicSignals);
   }, []);
@@ -231,19 +253,20 @@ export default function Home() {
       setStatus("joining");
       const { data: newWhitelistStatus } = await refetchWhitelist();
       if (newWhitelistStatus) {
-        router.push("/main/1");
+        router.push("/chat");
       }
     } catch (error) {
       console.error("Error joining community:", error);
-      if (error.name == "ContractFunctionExecutionError" || 
-          error.name == "ContractFunctionRevertedError") {
+      if (
+        error.name == "ContractFunctionExecutionError" ||
+        error.name == "ContractFunctionRevertedError"
+      ) {
         setStatus("contract_error");
       } else if (error.message.includes("rejected")) {
         setStatus("transaction_rejected");
       } else {
         setStatus("error_with_proof");
       }
-
     }
   };
 
@@ -275,13 +298,13 @@ export default function Home() {
   };
 
   useEffect(() => {
-    console.log(`isWhitelisted: ${isWhitelisted} address :$ ${address}`)
+    console.log(`isWhitelisted: ${isWhitelisted} address :$ ${address}`);
     if (isWhitelisted) {
-      console.log(`isWhitelisted: ${isWhitelisted} address :$ ${address}`)
+      console.log(`isWhitelisted: ${isWhitelisted} address :$ ${address}`);
       const fetch = async () => {
         const userRef = doc(db, "users", address);
         const userDoc = await getDoc(userRef);
-    
+
         if (userDoc.exists()) {
           // pass
         } else {
@@ -290,16 +313,33 @@ export default function Home() {
         }
       };
       fetch();
-    
+
       setTimeout(() => {
-        router.push("/main/1");
+        router.push("/chat");
       }, 10000);
     }
-    }, [isWhitelisted, address]);
+  }, [isWhitelisted, address]);
+
+  if (status === "joining") {
+    return (
+      <Main>
+      <div className="absolute bottom-44 left-0 right-0 flex items-center text-white justify-center">
+        <div
+          className="cursor-pointer text-xs opacity-60 animate-pulse"
+          onClick={() => {
+            router.push("/chat")
+          }}
+        >
+          press here to go to chat room or wait in a few seconds
+        </div>
+      </div>
+    </Main>
+    )
+  }
 
   if (!isWhitelisted) {
     return (
-      <div className="flex-col flex gap-6 bg-black justify-center items-center min-h-screen duration-1000 transition-all absolute top-0 left-0 w-screen">
+      <div className="flex-col flex gap-6 bg-black justify-center items-center min-h-screen duration-1000 transition-all absolute top-0 left-0 w-screen px-4 md:px-0">
         <Image
           src={"/ascii-art.png"}
           width={400}
@@ -307,117 +347,155 @@ export default function Home() {
           className="invert"
           alt="art"
         />
-          {!isConnected ? (
-            <w3m-button />
-            // <button
-            //   onClick={open}
-            //   className="p-4 bg-neutral-900 text-neutral-400 hover:bg-neutral-600 hover:text-neutral-300 transition-all rounded-full"
-            // >
-            //   Connect Wallet
-            // </button>
-          ) : (
-            <div className="text-neutral-400">
-              {isWhitelisted ? (
-                "Welcome to the community!"
-              ) : (
-                "Connected! Please proceed with proof generation."
-              )}
-            </div>
-          )}
-          <>
-            <div className="flex gap-4">
-              <button
-                // onClick={() => setProofMethod("remote")}
-                onClick={() => handleProofMethodChange("remote")}
-                className={`p-4 rounded-full ${
-                  proofMethod === "remote"
-                    ? "bg-neutral-600 text-neutral-300"
-                    : "bg-neutral-900 text-neutral-400 hover:bg-neutral-700 hover:text-neutral-300"
-                } transition-all`}
-              >
-                Generate Proof Remotely
-              </button>
-              <button
-                // onClick={() => setProofMethod("local")}
-                onClick={() => handleProofMethodChange("local")}
-                className={`p-4 rounded-full ${
-                  proofMethod === "local"
-                    ? "bg-neutral-600 text-neutral-300"
-                    : "bg-neutral-900 text-neutral-400 hover:bg-neutral-700 hover:text-neutral-300"
-                } transition-all`}
-              >
-                Upload Local Proof
-              </button>
-            </div>
+        {!isConnected ? (
+          <w3m-button />
+        ) : (
+          // <button
+          //   onClick={open}
+          //   className="p-4 bg-neutral-900 text-neutral-400 hover:bg-neutral-600 hover:text-neutral-300 transition-all rounded-full"
+          // >
+          //   Connect Wallet
+          // </button>
+          <div className="text-neutral-400 text-center">
+            {isWhitelisted
+              ? "Welcome to the community!"
+              : "Connected! Please proceed with proof generation."}
+          </div>
+        )}
+        <>
+          <div
+            className="text-neutral-400 animate-pulse px-14 text-center text-sm"
+            style={{
+              color: status.includes("error")
+                ? "red"
+                : status == "proof_ready"
+                  ? "yellow"
+                  : status == "joining"
+                    ? "green"
+                    : "white",
+            }}
+          >
+            {renderStatus()}
+          </div>
 
-            {proofMethod === "remote" && (
-              <label className="mb-4 py-2 px-12 bg-neutral-900 text-neutral-400 rounded-lg cursor-pointer hover:bg-neutral-600 hover:text-neutral-300 transition duration-300">
-                Select your registration email (.eml)
-                <input
-                  type="file"
-                  accept=".eml"
-                  className="hidden"
-                  onChange={handleRemoteProof}
-                  disabled={status !== "idle" && status !== "error" && status !== "error_processing"}
-                />
-              </label>
-            )}
-
-            {proofMethod === "local" && (
-              <>
-                <label className="mb-4 py-2 px-12 bg-neutral-900 text-neutral-400 rounded-lg cursor-pointer hover:bg-neutral-600 hover:text-neutral-300 transition duration-300">
-                {selectedProofFileName || "Upload proof.json"}
-                  <input
-                    type="file"
-                    accept=".json"
-                    className="hidden"
-                    onChange={(e) => handleLocalProof(e, 'proof')}
-                    disabled={status !== "idle" && status !== "error" && status !== "error_processing"}
-                  />
-                </label>
-                <label className="mb-4 py-2 px-12 bg-neutral-900 text-neutral-400 rounded-lg cursor-pointer hover:bg-neutral-600 hover:text-neutral-300 transition duration-300">
-                {selectedPublicOutputFileName || "Upload publicOutput.json"}
-                  <input
-                    type="file"
-                    accept=".json"
-                    className="hidden"
-                    onChange={(e) => handleLocalProof(e, 'publicOutput')}
-                    disabled={status !== "idle" && status !== "error" && status !== "error_processing"}
-                  />
-                </label>
-              </>
-            )}
-
-            <div className="text-neutral-400 animate-pulse">
-              {renderStatus()}
-            </div>
-
-            {((proofMethod === "remote" && file) || (proofMethod === "local" && proofFile && publicOutputFile)) &&
-              (status === "proof_ready" || status === "error_with_proof" || status === "contract_error" || status === "transaction_rejected") && (
+          {status != "proof_ready" && status != "joining" && (
+            <>
+              <div className="flex gap-4">
                 <button
-                  type="button"
-                  className="flex justify-center items-center p-4 mt-4 bg-neutral-400 text-neutral-800 rounded-full font-bold transition duration-300 hover:bg-neutral-700 hover:text-neutral-500"
-                  onClick={handleJoin}
-                  disabled={status !== "proof_ready" && status !== "error_with_proof" && status !== "contract_error" && status !== "transaction_rejected" || isJoining}
+                  // onClick={() => setProofMethod("remote")}
+                  onClick={() => handleProofMethodChange("remote")}
+                  className={`p-4 rounded-full ${
+                    proofMethod === "remote"
+                      ? "bg-neutral-600 text-neutral-300"
+                      : "bg-neutral-900 text-neutral-400 hover:bg-neutral-700 hover:text-neutral-300"
+                  } transition-all`}
                 >
-                  {isJoining ? "Joining..." : "Join Community"}
+                  Generate Proof Remotely
                 </button>
+                <button
+                  // onClick={() => setProofMethod("local")}
+                  onClick={() => handleProofMethodChange("local")}
+                  className={`p-4 rounded-full ${
+                    proofMethod === "local"
+                      ? "bg-neutral-600 text-neutral-300"
+                      : "bg-neutral-900 text-neutral-400 hover:bg-neutral-700 hover:text-neutral-300"
+                  } transition-all`}
+                >
+                  Upload Local Proof
+                </button>
+              </div>
+
+              {proofMethod === "remote" && (
+                <label className="mb-4 py-2 px-12 bg-neutral-900 text-neutral-400 text-center rounded-lg cursor-pointer hover:bg-neutral-600 hover:text-neutral-300 transition duration-300">
+                  Select your registration email (.eml)
+                  <input
+                    type="file"
+                    accept=".eml"
+                    className="hidden"
+                    onChange={handleRemoteProof}
+                    disabled={
+                      status !== "idle" &&
+                      status !== "error" &&
+                      status !== "error_processing"
+                    }
+                  />
+                </label>
               )}
 
-            <Link href="/local-proof-instructions" className="text-neutral-400 hover:text-neutral-300 transition-all">
-              How to generate proof locally
-            </Link>
-          </>
+              {proofMethod === "local" && (
+                <>
+                  <label className="mb-4 py-2 px-12 bg-neutral-900 text-neutral-400 rounded-lg cursor-pointer hover:bg-neutral-600 hover:text-neutral-300 transition duration-300">
+                    {selectedProofFileName || "Upload proof.json"}
+                    <input
+                      type="file"
+                      accept=".json"
+                      className="hidden"
+                      onChange={(e) => handleLocalProof(e, "proof")}
+                      disabled={
+                        status !== "idle" &&
+                        status !== "error" &&
+                        status !== "error_processing"
+                      }
+                    />
+                  </label>
+                  <label className="mb-4 py-2 px-12 bg-neutral-900 text-neutral-400 rounded-lg cursor-pointer hover:bg-neutral-600 hover:text-neutral-300 transition duration-300">
+                    {selectedPublicOutputFileName || "Upload publicOutput.json"}
+                    <input
+                      type="file"
+                      accept=".json"
+                      className="hidden"
+                      onChange={(e) => handleLocalProof(e, "publicOutput")}
+                      disabled={
+                        status !== "idle" &&
+                        status !== "error" &&
+                        status !== "error_processing"
+                      }
+                    />
+                  </label>
+                </>
+              )}
+            </>
+          )}
+
+          {((proofMethod === "remote" && file) ||
+            (proofMethod === "local" && proofFile && publicOutputFile)) &&
+            (status === "proof_ready" ||
+              status === "error_with_proof" ||
+              status === "contract_error" ||
+              status === "transaction_rejected") && (
+              <button
+                type="button"
+                className="flex justify-center items-center p-4 mt-4 bg-neutral-400 text-neutral-800 rounded-full font-bold transition duration-300 hover:bg-neutral-700 hover:text-neutral-500"
+                onClick={handleJoin}
+                disabled={
+                  (status !== "proof_ready" &&
+                    status !== "error_with_proof" &&
+                    status !== "contract_error" &&
+                    status !== "transaction_rejected") ||
+                  isJoining
+                }
+              >
+                {isJoining ? "Joining..." : "Join Community"}
+              </button>
+            )}
+
+          {/* <Link
+            href="/local-proof-instructions"
+            className="text-neutral-400 hover:text-neutral-300 transition-all"
+          >
+            How to generate proof locally
+          </Link> */}
+        </>
       </div>
     );
   }
 
   return (
     <Main>
-      <div className="absolute bottom-6 left-0 right-0 flex items-center text-white justify-center">
+      <div className="absolute bottom-44 left-0 right-0 flex items-center text-white justify-center">
         <div
           className="cursor-pointer text-xs opacity-60 animate-pulse"
-          onClick={() => router.push("/main/1")}
+          onClick={() => router.push("/chat")}
         >
           press here to go to chat room or wait in a few seconds
         </div>

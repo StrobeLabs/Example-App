@@ -228,11 +228,11 @@ function Band({ maxSpeed = 50, minSpeed = 10 }) {
             <mesh geometry={nodes.clamp.geometry} material={materials.metal} />
             <Text3D
               font={MyFont}
-              position={[-0.33, 0.45, 0.0001]}
+              position={[-0.33, 0.28, 0.0001]}
               scale={0.1}
               rotation={[0, 0, 0]}
             >
-              Fellow {"\n"}Strober
+              You
               <meshStandardMaterial color="white" />
             </Text3D>
           </group>
@@ -257,7 +257,7 @@ function Band({ maxSpeed = 50, minSpeed = 10 }) {
 export default function Main({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black absolute top-0 left-0 ">
-      <div className="relative w-full h-full pointer-events-auto">
+      <div className="relative w-full h-full pointer-events-auto -mt-24">
         <MainPage />
       </div>
       {children}
