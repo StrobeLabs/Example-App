@@ -4,7 +4,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 
 import { cookieToInitialState } from "wagmi";
-import { Analytics } from "@vercel/analytics/react"
+import { Analytics } from "@vercel/analytics/react";
 import { config } from "../config";
 import Web3ModalProvider from "../context";
 import { ZkRegexProvider } from "zk-regex-sdk";
@@ -14,7 +14,6 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "DeluluChat",
   description: "Proof of Luma by Strobe",
-  
 };
 
 export default function RootLayout({
@@ -26,7 +25,10 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <Analytics/>
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+      </head>
+      <Analytics />
       <body className={inter.className}>
         <ZkRegexProvider
           clientId={
