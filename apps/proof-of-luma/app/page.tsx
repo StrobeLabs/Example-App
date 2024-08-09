@@ -2,9 +2,9 @@
 "use client";
 
 import React, { useState, ChangeEvent, useEffect, useCallback } from "react";
-import { useAccount, useReadContract, useWriteContract } from "wagmi";
+import { useAccount, useReadContract, useWriteContract, useSwitchChain } from "wagmi";
 import { waitForTransaction } from "@wagmi/core";
-import { useWeb3Modal } from "@web3modal/wagmi/react";
+import { useWeb3Modal, useWeb3ModalState } from "@web3modal/wagmi/react";
 import { useZkRegex } from "zk-regex-sdk";
 import { encodeAbiParameters } from "viem";
 import PostalMime from "postal-mime";
@@ -16,6 +16,7 @@ import { ProofOfLumaRegistryABI } from "./../abis/ProofOfLumaRegistry";
 import Main from "./(screens)/StrobeCard";
 import { db } from "./util/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import { sepolia } from 'viem/chains';
 
 const PROOF_OF_LUMA_REGISTRY_ADDRESS = process.env
   .NEXT_PUBLIC_PROOF_OF_LUMA_REGISTRY_ADDRESS as `0x${string}`;
@@ -23,6 +24,8 @@ const PROOF_OF_LUMA_REGISTRY_ADDRESS = process.env
 export default function Home() {
   const { account, isConnected, address } = useAccount();
   const { open /* close */ } = useWeb3Modal();
+  const { selectedNetworkId } = useWeb3ModalState();
+  const { switchChain } = useSwitchChain();
   const { createInputWorker, generateInputFromEmail } = useZkRegex();
   const router = useRouter();
 
@@ -243,6 +246,12 @@ export default function Home() {
 
   const handleJoin = async () => {
     if (!encodedProof || !encodedPublicSignals) return;
+
+    if (Number(selectedNetworkId) !== sepolia.id) {
+      switchChain({ chainId: sepolia.id });
+      return;
+    }
+
     try {
       const result = await joinCommunity({
         address: PROOF_OF_LUMA_REGISTRY_ADDRESS,
