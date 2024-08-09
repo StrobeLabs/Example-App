@@ -116,7 +116,7 @@ const ToggleableForm = ({
             {isWhitelisted && (
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <label htmlFor="messageMedia" className="text-white opacity-50 text-sm">
-                  Upload Image/GIF as message background (optional)
+                  Upload Image/GIF as message background (optional). .GIFs FILES ONLY!
                 </label>
                 <input
                   id="messageMedia"
