@@ -95,6 +95,7 @@ function DrawingCanvas() {
               y,
               width: img.width,
               height: img.height,
+              timestamp: new Date(), // Add a timestamp for sorting
             };
 
             await addDoc(collection(db, "pictures"), newPicture);
@@ -134,8 +135,16 @@ function DrawingCanvas() {
     const canvas = canvasRef.current;
     context.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Sort pictures by timestamp, most recent first
+    const sortedPictures = [...pictures].sort((a, b) => {
+      if (!a.timestamp && !b.timestamp) return 0;
+      if (!a.timestamp) return -1;
+      if (!b.timestamp) return 1;
+      return new Date(b.timestamp) - new Date(a.timestamp);
+    });
+
     // Draw pictures on the canvas
-    pictures.forEach((picture) => {
+    sortedPictures.forEach((picture) => {
       const img = imageCache.current[picture.url];
       if (img) {
         let x, y, width, height;
@@ -229,6 +238,7 @@ function DrawingCanvas() {
         y,
         width: img.width,
         height: img.height,
+        timestamp: new Date(), // Add a timestamp for sorting
       };
 
       await addDoc(collection(db, "pictures"), newPicture);
