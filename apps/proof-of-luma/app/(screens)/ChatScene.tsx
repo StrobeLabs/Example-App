@@ -155,7 +155,7 @@ function ChatScene({
         onClick={onClick}
         onMouseLeave={onMouseLeave}
         onMouseEnter={onMouseEnter}
-        className="w-screen md:w-[50vw] h-screen overflow-scroll absolute top-0 right-0 bg-black border-[#2C2C2C] border p-4 md:p-12"
+        className="w-screen md:w-[35vw] h-screen overflow-scroll absolute top-0 right-0 bg-black border-[#2C2C2C] border p-4 md:p-12"
       >
         <ToggleableForm
           pseudoName={pseudoName}
