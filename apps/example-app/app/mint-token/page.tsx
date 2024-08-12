@@ -72,6 +72,9 @@ export default function Home() {
       [{ type: 'uint256[]' }],
       [publicSignals_bigint]
     );
+
+     console.log(proof);
+      console.log(publicSignals);
     
     writeContract({ 
       abi: zkERC20ABI,

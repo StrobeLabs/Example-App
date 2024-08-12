@@ -2,8 +2,8 @@
 pragma solidity >=0.8.25;
 
 import {Script} from "forge-std/src/Script.sol";
-import {AlwaysTrueVerifier} from "../src/AlwaysTrueVerifier.sol";
-import {ExampleApp} from "../src/ExampleApp.sol";
+import {AlwaysTrueVerifier} from "../src/example-app/AlwaysTrueVerifier.sol";
+import {ExampleApp} from "../src/example-app/ExampleApp.sol";
 
 contract ExampleContractsDeployer is Script {
     function run() external {
