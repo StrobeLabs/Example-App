@@ -1,7 +1,7 @@
 "use client";
 
 import { useWalletInfo, useWeb3Modal, useWeb3ModalState } from '@web3modal/wagmi/react';
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, ChangeEvent, useEffect } from "react";
 import { useWriteContract, useReadContract, useWaitForTransactionReceipt, useSwitchChain, useAccount } from "wagmi";
 import { zkERC20ABI } from '../../abis/ZKERC20';
 import { encodeAbiParameters } from 'viem';
@@ -19,7 +19,7 @@ export default function Home() {
   const { writeContract, data, error } = useWriteContract();
   const { isLoading, isSuccess } = useWaitForTransactionReceipt({ hash: data });
 
-  const {data: userBalance} = useReadContract({
+  const {data: userBalance, refetch} = useReadContract({
     abi: zkERC20ABI,
     address: ZKERC20_ADDRESS,
     functionName: 'balanceOf',
@@ -83,6 +83,12 @@ export default function Home() {
       ],
     });
   };
+
+  useEffect(() => {
+    if (isSuccess) {
+      refetch(); // Refetch user balance when minting is successful
+    }
+  }, [isSuccess, refetch]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>, setFileContent: Function, setFileName: Function) => {
     const file = event.target.files?.[0];
