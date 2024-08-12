@@ -73,9 +73,6 @@ export default function Home() {
       [publicSignals_bigint]
     );
 
-     console.log(proof);
-      console.log(publicSignals);
-    
     writeContract({ 
       abi: zkERC20ABI,
       address: ZKERC20_ADDRESS,
