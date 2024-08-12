@@ -356,6 +356,7 @@ export default function Home() {
           className="invert"
           alt="art"
         />
+       
         {!isConnected ? (
           <w3m-button />
         ) : (
@@ -371,6 +372,7 @@ export default function Home() {
               : "Connected! Please proceed with proof generation."}
           </div>
         )}
+      
         <>
           <div
             className="text-neutral-400 animate-pulse px-14 text-center text-sm"
@@ -495,6 +497,7 @@ export default function Home() {
             How to generate proof locally
           </Link> */}
         </>
+        <div className="text-[magenta] mt-14 text-md">Powered by zkEmail and Strobe</div>
       </div>
     );
   }
