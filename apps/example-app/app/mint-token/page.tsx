@@ -13,8 +13,8 @@ const ZKERC20_ADDRESS = process.env.NEXT_PUBLIC_ZKERC20_ADDRESS as `0x${string}`
 export default function Home() {
   const { walletInfo } = useWalletInfo();
   const account = useAccount({config});
-  const { open } = useWeb3Modal();
   const { selectedNetworkId } = useWeb3ModalState();
+  const { open } = useWeb3Modal();
   const { switchChain } = useSwitchChain();
   const { writeContract, data, error } = useWriteContract();
   const { isLoading, isSuccess } = useWaitForTransactionReceipt({ hash: data });
