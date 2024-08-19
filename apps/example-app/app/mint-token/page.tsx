@@ -28,6 +28,13 @@ export default function Home() {
     ]
   });
 
+  const {data: tokenSymbol} = useReadContract({
+    abi: zkERC20ABI,
+    address: ZKERC20_ADDRESS,
+    functionName: 'symbol',
+    args: []
+  })
+
   const [proofFileContent, setProofFileContent] = useState<any | null>(null);
   const [publicFileContent, setPublicFileContent] = useState<any | null>(null);
   const [proofFileName, setProofFileName] = useState<string | null>(null);
@@ -119,7 +126,7 @@ export default function Home() {
             Disconnect
           </button>
           <span className="text-neutral-400 font-bold mt-8">
-            You have {userBalance?.toString()} tokens
+            You have {userBalance?.toString()} {tokenSymbol?.toString()} tokens
           </span>
         </div>
       )}
@@ -172,6 +179,20 @@ export default function Home() {
           </div>
         )}
       </div>
+      <a
+          href="proof.json"
+          download
+          className="mt-4 p-4 bg-neutral-700 text-neutral-400 rounded-full hover:bg-neutral-600 hover:text-neutral-300 transition duration-300"
+        >
+          Download proof.json
+        </a>
+        <a
+          href="public.json"
+          download
+          className="mt-4 p-4 bg-neutral-700 text-neutral-400 rounded-full hover:bg-neutral-600 hover:text-neutral-300 transition duration-300"
+        >
+          Download public.json
+        </a>
     </div>
   );
 }
