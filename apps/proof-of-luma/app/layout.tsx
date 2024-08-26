@@ -5,9 +5,9 @@ import "./globals.css";
 
 import { cookieToInitialState } from "wagmi";
 import { Analytics } from "@vercel/analytics/react";
-import { config } from "../config";
-import Web3ModalProvider from "../context";
 import { ZkRegexProvider } from "zk-regex-sdk";
+import { config } from "./util/config";
+import Web3ModalProvider from "./components/contexts/Web3ModalProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -28,19 +28,17 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
       </head>
-      <Analytics />
+
+      {/* VERCEL ANALYTICS */}
+      <Analytics /> 
+
       <body className={inter.className}>
         <ZkRegexProvider
-          clientId={
-            "424623312719-73vn8vb4tmh8nht96q7vdbn3mc9pd63a.apps.googleusercontent.com"
-          }
-          zkRegexRegistryUrl="https://registry-dev.zkregex.com"
+          clientId={process.env.NEXT_PUBLIC_ZKREGEX_CLIENT_ID!}
+          zkRegexRegistryUrl={process.env.NEXT_PUBLIC_ZKREGEX_REGISTRY_URL!}
         >
           <Web3ModalProvider initialState={initialState}>
-            {/* <div className="flex md:hidden p-12 text-center bg-black text-white items-center justify-center h-screen w-screen overflow-hidden">
-              NOT SUPPORTED FOR MOBILE YET. PLEASE USE DESKTOP.
-            </div> */}
-            <div className="">{children}</div>
+            {children}
           </Web3ModalProvider>
         </ZkRegexProvider>
       </body>
