@@ -5,7 +5,7 @@ Proof of Luma is a decentralized application (dApp) that demonstrates the integr
 
 ## Tech Stack
 - Next.js: React framework for building the frontend
-- Firebase: Backend-as-a-Service for authentication and data storage (onchain messaging + storage)
+- Firebase: Backend-as-a-Service for authentication and data storage (offchain messaging + storage)
 - WalletConnect: For connecting to various Ethereum wallets
 - ZK-RegEx: Zero-knowledge regular expression library for creating and verifying proofs
 - Sepolia Testnet: Ethereum test network for deployment and testing
