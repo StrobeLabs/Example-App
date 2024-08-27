@@ -1,7 +1,7 @@
 "use client";
 
 import { useWalletInfo, useWeb3Modal, useWeb3ModalState } from '@web3modal/wagmi/react';
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, ChangeEvent, useEffect } from "react";
 import { useWriteContract, useReadContract, useWaitForTransactionReceipt, useSwitchChain, useAccount } from "wagmi";
 import { zkERC20ABI } from '../../abis/ZKERC20';
 import { encodeAbiParameters } from 'viem';
@@ -13,13 +13,13 @@ const ZKERC20_ADDRESS = process.env.NEXT_PUBLIC_ZKERC20_ADDRESS as `0x${string}`
 export default function Home() {
   const { walletInfo } = useWalletInfo();
   const account = useAccount({config});
-  const { open } = useWeb3Modal();
   const { selectedNetworkId } = useWeb3ModalState();
+  const { open } = useWeb3Modal();
   const { switchChain } = useSwitchChain();
   const { writeContract, data, error } = useWriteContract();
   const { isLoading, isSuccess } = useWaitForTransactionReceipt({ hash: data });
 
-  const {data: userBalance} = useReadContract({
+  const {data: userBalance, refetch} = useReadContract({
     abi: zkERC20ABI,
     address: ZKERC20_ADDRESS,
     functionName: 'balanceOf',
@@ -27,6 +27,13 @@ export default function Home() {
       account.address
     ]
   });
+
+  const {data: tokenSymbol} = useReadContract({
+    abi: zkERC20ABI,
+    address: ZKERC20_ADDRESS,
+    functionName: 'symbol',
+    args: []
+  })
 
   const [proofFileContent, setProofFileContent] = useState<any | null>(null);
   const [publicFileContent, setPublicFileContent] = useState<any | null>(null);
@@ -72,7 +79,6 @@ export default function Home() {
       [{ type: 'uint256[]' }],
       [publicSignals_bigint]
     );
-    
     writeContract({ 
       abi: zkERC20ABI,
       address: ZKERC20_ADDRESS,
@@ -83,6 +89,12 @@ export default function Home() {
       ],
     });
   };
+
+  useEffect(() => {
+    if (isSuccess) {
+      refetch(); // Refetch user balance when minting is successful
+    }
+  }, [isSuccess, refetch]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>, setFileContent: Function, setFileName: Function) => {
     const file = event.target.files?.[0];
@@ -113,7 +125,7 @@ export default function Home() {
             Disconnect
           </button>
           <span className="text-neutral-400 font-bold mt-8">
-            You have {userBalance?.toString()} tokens
+            You have {userBalance?.toString()} {tokenSymbol?.toString()} tokens
           </span>
         </div>
       )}
@@ -166,6 +178,20 @@ export default function Home() {
           </div>
         )}
       </div>
+      <a
+          href="proof.json"
+          download
+          className="mt-4 p-4 bg-neutral-700 text-neutral-400 rounded-full hover:bg-neutral-600 hover:text-neutral-300 transition duration-300"
+        >
+          Download proof.json
+        </a>
+        <a
+          href="public.json"
+          download
+          className="mt-4 p-4 bg-neutral-700 text-neutral-400 rounded-full hover:bg-neutral-600 hover:text-neutral-300 transition duration-300"
+        >
+          Download public.json
+        </a>
     </div>
   );
 }
