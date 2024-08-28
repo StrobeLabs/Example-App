@@ -1,10 +1,24 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalEnv": [
+    "NEXT_PUBLIC_STROBE_CORE_ADDRESS",
+    "NEXT_PUBLIC_EXAMPLE_APP_ADDRESS",
+    "NEXT_PUBLIC_ALWAYS_TRUE_VERIFIER_ADDRESS",
+    "NEXT_PUBLIC_ALWAYS_TRUE_VERIFIER_CIRCUIT_HASH",
+    "NEXT_PUBLIC_PROOF_OF_LUMA_REGISTRY_ADDRESS"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": [
+        "NEXT_PUBLIC_STROBE_CORE_ADDRESS",
+        "NEXT_PUBLIC_EXAMPLE_APP_ADDRESS",
+        "NEXT_PUBLIC_ALWAYS_TRUE_VERIFIER_ADDRESS",
+        "NEXT_PUBLIC_ALWAYS_TRUE_VERIFIER_CIRCUIT_HASH",
+        "NEXT_PUBLIC_PROOF_OF_LUMA_REGISTRY_ADDRESS"
+      ]
     },
     "lint": {
       "dependsOn": ["^lint"]
@@ -12,7 +26,14 @@
     "dev": {
       "cache": false,
       "persistent": true,
-      "inputs": ["$TURBO_DEFAULT$", ".env*"]
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "env": [
+        "NEXT_PUBLIC_STROBE_CORE_ADDRESS",
+        "NEXT_PUBLIC_EXAMPLE_APP_ADDRESS",
+        "NEXT_PUBLIC_ALWAYS_TRUE_VERIFIER_ADDRESS",
+        "NEXT_PUBLIC_ALWAYS_TRUE_VERIFIER_CIRCUIT_HASH",
+        "NEXT_PUBLIC_PROOF_OF_LUMA_REGISTRY_ADDRESS"
+      ]
     },
     "test": {},
     "deploy:example-sepolia": {},

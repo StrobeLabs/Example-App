@@ -79,7 +79,6 @@ export default function Home() {
       [{ type: 'uint256[]' }],
       [publicSignals_bigint]
     );
-
     writeContract({ 
       abi: zkERC20ABI,
       address: ZKERC20_ADDRESS,

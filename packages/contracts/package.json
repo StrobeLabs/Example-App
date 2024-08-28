@@ -8,16 +8,17 @@
     "lint": "pnpm run lint:sol && pnpm run prettier:check",
     "lint:sol": "forge fmt --check && pnpm solhint {script,src,test}/**/*.sol",
     "prettier:check": "prettier --check \"**/*.{json,md,yml}\" --ignore-path \".prettierignore\"",
-    "deploy:all-sepolia": "pnpm deploy:example-sepolia && pnpm run deploy:zkerc20-sepolia",
+    "deploy:all-sepolia": "pnpm deploy:example-sepolia && pnpm deploy:zkerc20-sepolia && pnpm deploy:luma-sepolia",
     "deploy:all-anvil": "pnpm deploy:example-anvil && pnpm run deploy:zkerc20-anvil",
     "deploy:example-sepolia": "source .env && forge script --chain sepolia script/ExampleContractsDeployer.s.sol:ExampleContractsDeployer --rpc-url $SEPOLIA_RPC_URL --broadcast -vvvv --slow --verify",
     "deploy:example-anvil": "forge script script/ExampleContractsDeployer.s.sol:ExampleContractsDeployer --fork-url http://localhost:8545 --broadcast",
     "deploy:zkerc20-sepolia": "source .env && forge script --chain sepolia script/ZKERC20ContractsDeployer.s.sol:ZKERC20ContractsDeployer --rpc-url $SEPOLIA_RPC_URL --broadcast -vvvv --slow --verify",
-    "deploy:zkerc20-anvil": "forge script script/ZKERC20ContractsDeployer.s.sol:ZKERC20ContractsDeployer --fork-url http://localhost:8545 --broadcast"
+    "deploy:zkerc20-anvil": "forge script script/ZKERC20ContractsDeployer.s.sol:ZKERC20ContractsDeployer --fork-url http://localhost:8545 --broadcast",
+    "deploy:luma-sepolia": "source .env && forge script --chain sepolia script/ProofOfLumaContractsDeployer.s.sol:ProofOfLumaContractsDeployer --rpc-url $SEPOLIA_RPC_URL --broadcast -vvvv --slow --verify"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.0.1",
-    "@strobelabs/contracts": "^0.1.3"
+    "@strobelabs/contracts": "^0.1.4"
   },
   "devDependencies": {
     "forge-std": "github:foundry-rs/forge-std#v1.8.1",
